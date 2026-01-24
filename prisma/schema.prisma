@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          Role      @default(EXPLORER)
+  reputation    Int       @default(0)
+  isPremium     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  problems      Problem[]
+  solutions     Solution[]
+  votes         Vote[]
+  comments      Comment[]
+  subscription  Subscription?
+}
+
+model Problem {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  category    Category
+  stage       StartupStage
+  tags        String[]
+  isSolved    Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  createdBy   User          @relation(fields: [createdById], references: [id])
+  createdById String        @db.ObjectId
+  solutions   Solution[]
+  comments    Comment[]
+}
+
+model Solution {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  content     String
+  actionSteps String[]
+  tools       String[]
+  isVerified  Boolean   @default(false)
+  upvotes     Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  problem     Problem   @relation(fields: [problemId], references: [id])
+  problemId   String    @db.ObjectId
+  author      User      @relation(fields: [authorId], references: [id])
+  authorId    String    @db.ObjectId
+  votes       Vote[]
+  comments    Comment[]
+}
+
+model Vote {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  type       VoteType
+  createdAt  DateTime @default(now())
+  
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String   @db.ObjectId
+  solution   Solution @relation(fields: [solutionId], references: [id])
+  solutionId String   @db.ObjectId
+  
+  @@unique([userId, solutionId])
+}
+
+model Comment {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  createdAt DateTime @default(now())
+  
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String   @db.ObjectId
+  problem   Problem? @relation(fields: [problemId], references: [id])
+  problemId String?  @db.ObjectId
+  solution  Solution? @relation(fields: [solutionId], references: [id])
+  solutionId String? @db.ObjectId
+}
+
+model Subscription {
+  id        String           @id @default(auto()) @map("_id") @db.ObjectId
+  plan      SubscriptionPlan
+  status    String
+  startDate DateTime         @default(now())
+  endDate   DateTime?
+  
+  user      User             @relation(fields: [userId], references: [id])
+  userId    String           @unique @db.ObjectId
+}
+
+enum Role {
+  EXPLORER
+  BUILDER
+  MENTOR
+}
+
+enum Category {
+  PRODUCT_DEVELOPMENT
+  MARKETING
+  FUNDRAISING
+  OPERATIONS
+  HIRING
+  LEGAL
+  TECHNOLOGY
+  STRATEGY
+}
+
+enum StartupStage {
+  IDEA
+  MVP
+  EARLY_STAGE
+  GROWTH
+  SCALING
+}
+
+enum VoteType {
+  UP
+  DOWN
+}
+
+enum SubscriptionPlan {
+  FREE
+  PREMIUM
+}

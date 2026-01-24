@@ -1,0 +1,372 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, MessageSquare, ThumbsUp, User, Calendar, Star, X, Plus } from "lucide-react";
+
+const mockProblem = {
+  id: "1",
+  title: "How to validate product-market fit for B2B SaaS?",
+  description: "I've built an MVP for a B2B project management tool, but I'm struggling to determine if I have real product-market fit. We have 50 beta users, but only 20% are actively using it weekly. The feedback is mixed - some love it, others find it confusing. How do I know if I should pivot or keep iterating on the current solution?",
+  category: "Product Development",
+  stage: "MVP Stage",
+  tags: ["product-market-fit", "b2b-saas", "validation"],
+  isSolved: true,
+  createdAt: "2024-01-15",
+  author: { name: "Sarah Chen", role: "BUILDER" },
+  upvotes: 23,
+  solutions: [
+    {
+      id: "1",
+      content: "Product-market fit for B2B SaaS is tricky, but here's a systematic approach that worked for me:",
+      actionSteps: [
+        "Define your success metrics: For B2B SaaS, focus on weekly active users, feature adoption, and customer retention rather than just signups",
+        "Conduct user interviews: Talk to both active and inactive users. Ask specific questions about their workflow and pain points",
+        "Implement cohort analysis: Track user behavior over time to identify patterns in engagement and churn"
+      ],
+      tools: ["Mixpanel", "Hotjar", "Calendly"],
+      isVerified: true,
+      upvotes: 15,
+      author: { name: "Mike Rodriguez", role: "MENTOR", reputation: 1890 },
+      createdAt: "2024-01-15"
+    }
+  ]
+};
+
+export default function ProblemPage({ params }: { params: { id: string } }) {
+  const router = useRouter();
+  const [problem] = useState(mockProblem);
+  const [showSolutionForm, setShowSolutionForm] = useState(false);
+  const [solutionForm, setSolutionForm] = useState({
+    content: "",
+    actionSteps: [""],
+    tools: [""]
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const addActionStep = () => {
+    setSolutionForm(prev => ({
+      ...prev,
+      actionSteps: [...prev.actionSteps, ""]
+    }));
+  };
+
+  const removeActionStep = (index: number) => {
+    setSolutionForm(prev => ({
+      ...prev,
+      actionSteps: prev.actionSteps.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateActionStep = (index: number, value: string) => {
+    setSolutionForm(prev => ({
+      ...prev,
+      actionSteps: prev.actionSteps.map((step, i) => i === index ? value : step)
+    }));
+  };
+
+  const addTool = () => {
+    setSolutionForm(prev => ({
+      ...prev,
+      tools: [...prev.tools, ""]
+    }));
+  };
+
+  const removeTool = (index: number) => {
+    setSolutionForm(prev => ({
+      ...prev,
+      tools: prev.tools.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateTool = (index: number, value: string) => {
+    setSolutionForm(prev => ({
+      ...prev,
+      tools: prev.tools.map((tool, i) => i === index ? value : tool)
+    }));
+  };
+
+  const handleSubmitSolution = async () => {
+    setIsSubmitting(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setShowSolutionForm(false);
+      setSolutionForm({ content: "", actionSteps: [""], tools: [""] });
+      alert("Solution submitted successfully!");
+    }, 1000);
+  };
+
+  return (
+    <div className="p-6 max-w-4xl mx-auto animate-fade-in">
+      <Button 
+        variant="secondary" 
+        onClick={() => router.back()}
+        className="mb-6 transform hover:scale-105 transition-all"
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back
+      </Button>
+
+      <Card className="mb-6 card-hover animate-scale-in">
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <CardTitle className="text-2xl mb-2">{problem.title}</CardTitle>
+              <div className="flex items-center gap-4 text-sm text-helper mb-4">
+                <div className="flex items-center gap-1">
+                  <User className="h-4 w-4" />
+                  <span>{problem.author.name}</span>
+                  <Badge variant="default" className="text-xs">{problem.author.role}</Badge>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  <span>{new Date(problem.createdAt).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <ThumbsUp className="h-4 w-4" />
+                  <span>{problem.upvotes} upvotes</span>
+                </div>
+              </div>
+            </div>
+            <Badge variant={problem.isSolved ? "verified" : "default"} className={problem.isSolved ? "animate-pulse" : ""}>
+              {problem.isSolved ? "Solved" : "Open"}
+            </Badge>
+          </div>
+          
+          <div className="flex gap-2 mb-4">
+            <Badge variant="default">{problem.category}</Badge>
+            <Badge variant="default">{problem.stage}</Badge>
+            {problem.tags.map(tag => (
+              <Badge key={tag} variant="outline" className="text-xs">#{tag}</Badge>
+            ))}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-body leading-relaxed">{problem.description}</p>
+        </CardContent>
+      </Card>
+
+      <div className="space-y-6">
+        <div className="flex items-center gap-2 animate-slide-in">
+          <MessageSquare className="h-5 w-5" />
+          <h2 className="text-h2">{problem.solutions.length} Solutions</h2>
+        </div>
+
+        {problem.solutions.map((solution, index) => (
+          <Card key={solution.id} className="card-hover animate-slide-in" style={{animationDelay: `${index * 0.1}s`}}>
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center">
+                    <User className="h-5 w-5 text-accent-foreground" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{solution.author.name}</span>
+                      <Badge variant={solution.author.role === "MENTOR" ? "premium" : "default"} className="text-xs">
+                        {solution.author.role}
+                      </Badge>
+                      {solution.isVerified && (
+                        <Badge variant="verified" className="text-xs animate-pulse">Verified</Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-helper">
+                      <Star className="h-3 w-3" />
+                      <span>{solution.author.reputation} reputation</span>
+                      <span>•</span>
+                      <span>{new Date(solution.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </div>
+                <Button variant="secondary" size="sm" className="transform hover:scale-105 transition-all">
+                  <ThumbsUp className="h-4 w-4 mr-1" />
+                  {solution.upvotes}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-body mb-4">{solution.content}</p>
+              
+              {solution.actionSteps.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="font-medium mb-2">Action Steps:</h4>
+                  <ol className="list-decimal list-inside space-y-2">
+                    {solution.actionSteps.map((step, stepIndex) => (
+                      <li key={stepIndex} className="text-sm text-helper animate-fade-in" style={{animationDelay: `${stepIndex * 0.05}s`}}>
+                        {step}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+              
+              {solution.tools.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-2">Recommended Tools:</h4>
+                  <div className="flex gap-2">
+                    {solution.tools.map(tool => (
+                      <Badge key={tool} variant="outline" className="text-xs">{tool}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="mt-6 card-hover animate-fade-in">
+        <CardContent className="pt-6 text-center">
+          <h3 className="font-medium mb-2">Have a solution to share?</h3>
+          <p className="text-helper mb-4">Help the community by sharing your experience and insights.</p>
+          <Button 
+            className="transform hover:scale-105 transition-all"
+            onClick={() => setShowSolutionForm(true)}
+          >
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Add Your Solution
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Solution Form Modal */}
+      {showSolutionForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fade-in">
+          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Add Your Solution</CardTitle>
+                <Button 
+                  variant="secondary" 
+                  size="sm"
+                  onClick={() => setShowSolutionForm(false)}
+                  className="transform hover:scale-105 transition-all"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Your Solution</label>
+                <textarea
+                  className="w-full min-h-[120px] p-3 border border-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent transition-all"
+                  placeholder="Describe your solution and approach..."
+                  value={solutionForm.content}
+                  onChange={(e) => setSolutionForm(prev => ({ ...prev, content: e.target.value }))}
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium">Action Steps (Optional)</label>
+                  <Button 
+                    type="button" 
+                    variant="secondary" 
+                    size="sm"
+                    onClick={addActionStep}
+                    className="transform hover:scale-105 transition-all"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Step
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {solutionForm.actionSteps.map((step, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        placeholder={`Step ${index + 1}...`}
+                        value={step}
+                        onChange={(e) => updateActionStep(index, e.target.value)}
+                        className="flex-1 transition-all focus:scale-105"
+                      />
+                      {solutionForm.actionSteps.length > 1 && (
+                        <Button 
+                          type="button" 
+                          variant="secondary" 
+                          size="sm"
+                          onClick={() => removeActionStep(index)}
+                          className="transform hover:scale-105 transition-all"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-sm font-medium">Recommended Tools (Optional)</label>
+                  <Button 
+                    type="button" 
+                    variant="secondary" 
+                    size="sm"
+                    onClick={addTool}
+                    className="transform hover:scale-105 transition-all"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Tool
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {solutionForm.tools.map((tool, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        placeholder="Tool name..."
+                        value={tool}
+                        onChange={(e) => updateTool(index, e.target.value)}
+                        className="flex-1 transition-all focus:scale-105"
+                      />
+                      {solutionForm.tools.length > 1 && (
+                        <Button 
+                          type="button" 
+                          variant="secondary" 
+                          size="sm"
+                          onClick={() => removeTool(index)}
+                          className="transform hover:scale-105 transition-all"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <Button 
+                  variant="secondary" 
+                  onClick={() => setShowSolutionForm(false)}
+                  className="flex-1 transform hover:scale-105 transition-all"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleSubmitSolution}
+                  disabled={!solutionForm.content.trim() || isSubmitting}
+                  className="flex-1 transform hover:scale-105 transition-all"
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Submitting...
+                    </span>
+                  ) : (
+                    "Submit Solution"
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
