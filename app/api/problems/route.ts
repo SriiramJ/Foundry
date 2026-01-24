@@ -2,102 +2,69 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { z } from "zod";
+
+const createProblemSchema = z.object({
+  title: z.string().min(10),
+  description: z.string().min(50),
+  category: z.enum(["PRODUCT_DEVELOPMENT", "MARKETING", "FUNDRAISING", "OPERATIONS", "HIRING", "LEGAL", "TECHNOLOGY", "STRATEGY"]),
+  stage: z.enum(["IDEA", "MVP", "EARLY_STAGE", "GROWTH", "SCALING"]),
+  tags: z.array(z.string()).optional()
+});
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { title, description, category, stage, tags } = await request.json();
-
-    if (!title || !description || !category || !stage) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
-    }
+    const body = await request.json();
+    const validatedData = createProblemSchema.parse(body);
 
     const problem = await prisma.problem.create({
       data: {
-        title,
-        description,
-        category: category.toUpperCase(),
-        stage: stage.toUpperCase(),
-        tags: tags || [],
-        createdById: session.user.id,
+        ...validatedData,
+        tags: validatedData.tags || [],
+        createdById: session.user.id
       },
       include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            role: true,
-          }
-        }
+        createdBy: { select: { name: true, role: true } },
+        solutions: { include: { author: { select: { name: true, role: true, reputation: true } } } }
       }
     });
 
     return NextResponse.json(problem);
   } catch (error) {
-    console.error("Problem creation error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to create problem" }, { status: 500 });
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
-    const category = searchParams.get("category");
-    const stage = searchParams.get("stage");
-
-    const where: any = {};
-    if (category) where.category = category.toUpperCase();
-    if (stage) where.stage = stage.toUpperCase();
-
     const problems = await prisma.problem.findMany({
-      where,
       include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            role: true,
-          }
+        createdBy: { select: { name: true, role: true } },
+        solutions: { 
+          include: { 
+            author: { select: { name: true, role: true } },
+            votes: { where: { type: "UP" } }
+          } 
         },
-        solutions: {
-          select: {
-            id: true,
-            isVerified: true,
-          }
-        },
-        _count: {
-          select: {
-            solutions: true,
-            comments: true,
-          }
-        }
+        _count: { select: { solutions: true } }
       },
-      orderBy: {
-        createdAt: "desc"
-      },
-      skip: (page - 1) * limit,
-      take: limit,
+      orderBy: { createdAt: "desc" }
     });
 
-    return NextResponse.json(problems);
+    const problemsWithUpvotes = problems.map(problem => ({
+      ...problem,
+      upvotes: problem.solutions.reduce((total, solution) => 
+        total + solution.votes.length, 0
+      )
+    }));
+
+    return NextResponse.json(problemsWithUpvotes);
   } catch (error) {
-    console.error("Problems fetch error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to fetch problems" }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,8 +14,8 @@ export default function SettingsPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: session?.user?.name || "",
-    email: session?.user?.email || "",
+    name: "",
+    email: "",
     notifications: {
       newSolutions: true,
       mentorResponses: true,
@@ -23,13 +23,39 @@ export default function SettingsPage() {
     }
   });
 
+  useEffect(() => {
+    if (session?.user) {
+      setFormData({
+        name: session.user.name || "",
+        email: session.user.email || "",
+        notifications: {
+          newSolutions: true,
+          mentorResponses: true,
+          weeklyDigest: false,
+        }
+      });
+    }
+  }, [session]);
+
   const handleSave = async () => {
     setIsLoading(true);
-    // In a real app, this would save to the database
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      
+      if (response.ok) {
+        alert("Settings saved successfully!");
+      } else {
+        alert("Failed to save settings");
+      }
+    } catch (error) {
+      alert("Error saving settings");
+    } finally {
       setIsLoading(false);
-      alert("Settings saved successfully!");
-    }, 1000);
+    }
   };
 
   const handleSignOut = () => {

@@ -9,22 +9,22 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
 const categories = [
-  { id: "product_development", label: "Product Development", description: "MVP, features, technical decisions" },
-  { id: "marketing", label: "Marketing", description: "Customer acquisition, branding, campaigns" },
-  { id: "fundraising", label: "Fundraising", description: "Investment, pitch decks, investor relations" },
-  { id: "operations", label: "Operations", description: "Processes, scaling, efficiency" },
-  { id: "hiring", label: "Hiring", description: "Team building, recruitment, culture" },
-  { id: "legal", label: "Legal", description: "Contracts, compliance, intellectual property" },
-  { id: "technology", label: "Technology", description: "Tech stack, architecture, development" },
-  { id: "strategy", label: "Strategy", description: "Business model, market positioning" },
+  { id: "PRODUCT_DEVELOPMENT", label: "Product Development", description: "MVP, features, technical decisions" },
+  { id: "MARKETING", label: "Marketing", description: "Customer acquisition, branding, campaigns" },
+  { id: "FUNDRAISING", label: "Fundraising", description: "Investment, pitch decks, investor relations" },
+  { id: "OPERATIONS", label: "Operations", description: "Processes, scaling, efficiency" },
+  { id: "HIRING", label: "Hiring", description: "Team building, recruitment, culture" },
+  { id: "LEGAL", label: "Legal", description: "Contracts, compliance, intellectual property" },
+  { id: "TECHNOLOGY", label: "Technology", description: "Tech stack, architecture, development" },
+  { id: "STRATEGY", label: "Strategy", description: "Business model, market positioning" },
 ];
 
 const stages = [
-  { id: "idea", label: "Idea Stage", description: "Just getting started with an idea" },
-  { id: "mvp", label: "MVP Stage", description: "Building or testing minimum viable product" },
-  { id: "early_stage", label: "Early Stage", description: "Have product, seeking product-market fit" },
-  { id: "growth", label: "Growth Stage", description: "Scaling and growing the business" },
-  { id: "scaling", label: "Scaling Stage", description: "Established business, optimizing operations" },
+  { id: "IDEA", label: "Idea Stage", description: "Just getting started with an idea" },
+  { id: "MVP", label: "MVP Stage", description: "Building or testing minimum viable product" },
+  { id: "EARLY_STAGE", label: "Early Stage", description: "Have product, seeking product-market fit" },
+  { id: "GROWTH", label: "Growth Stage", description: "Scaling and growing the business" },
+  { id: "SCALING", label: "Scaling Stage", description: "Established business, optimizing operations" },
 ];
 
 export default function PostProblemPage() {
@@ -50,7 +50,13 @@ export default function PostProblemPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          title: formData.title,
+          description: formData.description,
+          category: formData.category.toUpperCase(),
+          stage: formData.stage.toUpperCase(),
+          tags: []
+        }),
       });
 
       if (response.ok) {

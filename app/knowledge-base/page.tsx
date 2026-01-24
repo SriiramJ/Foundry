@@ -12,66 +12,23 @@ import { Search, Filter, Lock, CheckCircle, MessageSquare, TrendingUp, ArrowLeft
 
 const categories = [
   "All Categories",
-  "Product Development",
-  "Marketing",
-  "Fundraising",
-  "Operations",
-  "Hiring",
-  "Legal",
-  "Technology",
-  "Strategy"
+  "PRODUCT_DEVELOPMENT",
+  "MARKETING",
+  "FUNDRAISING",
+  "OPERATIONS",
+  "HIRING",
+  "LEGAL",
+  "TECHNOLOGY",
+  "STRATEGY"
 ];
 
 const stages = [
   "All Stages",
-  "Idea Stage",
-  "MVP Stage",
-  "Early Stage",
-  "Growth Stage",
-  "Scaling Stage"
-];
-
-// Mock data - in real app, this would come from API
-const mockProblems = [
-  {
-    id: "1",
-    title: "How to validate product-market fit for B2B SaaS?",
-    description: "I've built an MVP for a B2B project management tool, but I'm struggling to determine if I have real product-market fit...",
-    category: "Product Development",
-    stage: "MVP Stage",
-    isSolved: true,
-    solutionCount: 5,
-    upvotes: 23,
-    createdAt: "2024-01-15",
-    author: { name: "Sarah Chen", role: "BUILDER" },
-    isPremium: false
-  },
-  {
-    id: "2",
-    title: "Best practices for hiring first engineering team?",
-    description: "We're a 3-person founding team looking to hire our first 2-3 engineers. What should we look for?",
-    category: "Hiring",
-    stage: "Early Stage",
-    isSolved: true,
-    solutionCount: 8,
-    upvotes: 34,
-    createdAt: "2024-01-12",
-    author: { name: "Mike Rodriguez", role: "BUILDER" },
-    isPremium: true
-  },
-  {
-    id: "3",
-    title: "Pricing strategy for SaaS with multiple user tiers?",
-    description: "We have individual users, team plans, and enterprise customers. How do we structure pricing?",
-    category: "Strategy",
-    stage: "Growth Stage",
-    isSolved: true,
-    solutionCount: 12,
-    upvotes: 45,
-    createdAt: "2024-01-10",
-    author: { name: "Alex Thompson", role: "BUILDER" },
-    isPremium: true
-  }
+  "IDEA",
+  "MVP",
+  "EARLY_STAGE",
+  "GROWTH",
+  "SCALING"
 ];
 
 export default function KnowledgeBasePage() {
@@ -81,7 +38,26 @@ export default function KnowledgeBasePage() {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedStage, setSelectedStage] = useState("All Stages");
   const [showFilters, setShowFilters] = useState(false);
-  const [problems, setProblems] = useState(mockProblems);
+  const [problems, setProblems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProblems();
+  }, []);
+
+  const fetchProblems = async () => {
+    try {
+      const response = await fetch('/api/problems');
+      if (response.ok) {
+        const data = await response.json();
+        setProblems(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch problems:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const isPremium = session?.user?.isPremium || false;
 
@@ -93,6 +69,17 @@ export default function KnowledgeBasePage() {
     
     return matchesSearch && matchesCategory && matchesStage;
   });
+
+  if (loading) {
+    return (
+      <div className="p-6 animate-fade-in">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent mx-auto"></div>
+          <p className="text-helper mt-2">Loading problems...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 animate-fade-in">
@@ -204,22 +191,19 @@ export default function KnowledgeBasePage() {
                   </div>
                   
                   <p className="text-helper text-sm mb-3 line-clamp-2">
-                    {problem.isPremium && !isPremium 
-                      ? "This premium solution contains detailed implementation steps and expert insights. Upgrade to access full content."
-                      : problem.description
-                    }
+                    {problem.description}
                   </p>
                   
                   <div className="flex items-center gap-4 text-sm text-helper">
                     <div className="flex items-center gap-1">
                       <CheckCircle className="h-4 w-4 text-success" />
-                      <span>{problem.solutionCount} solutions</span>
+                      <span>{problem._count?.solutions || 0} solutions</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <TrendingUp className="h-4 w-4" />
-                      <span>{problem.upvotes} upvotes</span>
+                      <span>{problem.upvotes || 0} upvotes</span>
                     </div>
-                    <span>by {problem.author.name}</span>
+                    <span>by {problem.createdBy.name}</span>
                     <span>{new Date(problem.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
@@ -236,11 +220,6 @@ export default function KnowledgeBasePage() {
                       {problem.stage}
                     </Badge>
                   </div>
-                  {problem.isPremium && (
-                    <Badge variant="premium" className="text-xs animate-pulse">
-                      Premium
-                    </Badge>
-                  )}
                 </div>
               </div>
             </CardContent>

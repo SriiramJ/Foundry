@@ -94,11 +94,24 @@ export default function UpgradePage() {
 
   const handleUpgrade = async (planId: string) => {
     setIsLoading(true);
-    // In a real app, this would integrate with Stripe or another payment processor
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/upgrade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId })
+      });
+      
+      if (response.ok) {
+        alert(`Successfully upgraded to ${planId} plan!`);
+        window.location.reload();
+      } else {
+        alert('Upgrade failed. Please try again.');
+      }
+    } catch (error) {
+      alert('Error processing upgrade');
+    } finally {
       setIsLoading(false);
-      alert(`Upgrade to ${planId} plan initiated! (This is a demo)`);
-    }, 2000);
+    }
   };
 
   return (
