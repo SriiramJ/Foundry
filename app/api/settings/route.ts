@@ -27,9 +27,7 @@ export async function PUT(request: NextRequest) {
     const updateData: any = {};
     if (validatedData.name) updateData.name = validatedData.name;
     if (validatedData.email) updateData.email = validatedData.email;
-    if (validatedData.notifications) {
-      updateData.notificationSettings = validatedData.notifications;
-    }
+    // Note: notifications stored in client state only for now
 
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
@@ -38,7 +36,6 @@ export async function PUT(request: NextRequest) {
         id: true,
         name: true,
         email: true,
-        notificationSettings: true,
       }
     });
 

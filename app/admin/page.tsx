@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, X, AlertCircle, Clock, User } from "lucide-react";
 
 export default function AdminPage() {
-  const [applications, setApplications] = useState([]);
+  const [applications, setApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,6 +20,8 @@ export default function AdminPage() {
       if (response.ok) {
         const data = await response.json();
         setApplications(data.applications);
+      } else {
+        console.error('Failed to fetch applications:', response.status);
       }
     } catch (error) {
       console.error('Failed to fetch applications:', error);

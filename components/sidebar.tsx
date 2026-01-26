@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
 import { Sun, Moon } from "lucide-react";
@@ -12,7 +13,8 @@ import {
   BookOpen, 
   Users, 
   User, 
-  Settings 
+  Settings,
+  Shield
 } from "lucide-react"
 
 const navigation = [
@@ -27,6 +29,9 @@ const navigation = [
 export function Sidebar() {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
+  const { data: session } = useSession();
+  
+  const isAdmin = session?.user?.role === 'ADMIN';
 
   return (
     <div className="flex h-full w-64 flex-col border-r border-border bg-background animate-slide-in">
@@ -64,6 +69,21 @@ export function Sidebar() {
             </Link>
           )
         })}
+        
+        {isAdmin && (
+          <Link
+            href="/admin"
+            className={cn(
+              "flex items-center px-3 py-2 rounded-lg border border-transparent text-sm font-medium transition-all transform hover:scale-105 animate-fade-in",
+              pathname === "/admin"
+                ? "bg-accent/10 text-accent border-accent/30 scale-105"
+                : "text-muted-foreground hover:bg-muted/50 hover:text-accent hover:border-accent/20"
+            )}
+          >
+            <Shield className="mr-3 h-5 w-5 transition-transform hover:scale-110" />
+            Admin
+          </Link>
+        )}
       </nav>
     </div>
   )

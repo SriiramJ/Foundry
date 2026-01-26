@@ -49,7 +49,8 @@ export async function GET() {
     return NextResponse.json({
       ...user,
       upvotesReceived,
-      verifiedSolutions
+      verifiedSolutions,
+      mentorApplication: user.mentorApplication
     });
   } catch (error) {
     console.error('User fetch error:', error);

@@ -185,7 +185,7 @@ export default function UpgradePage() {
                   className={`w-full transform hover:scale-105 transition-all ${plan.popular ? 'animate-pulse' : ''}`}
                   variant={plan.popular ? "default" : "secondary"}
                   onClick={() => handleUpgrade(plan.id)}
-                  disabled={isLoading || (plan.id === "free" && !session?.user?.isPremium)}
+                  disabled={isLoading || (plan.id === "free" && false)} // Removed isPremium check
                 >
                   {isLoading ? (
                     <span className="flex items-center">

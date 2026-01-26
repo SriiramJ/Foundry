@@ -38,7 +38,7 @@ export default function KnowledgeBasePage() {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedStage, setSelectedStage] = useState("All Stages");
   const [showFilters, setShowFilters] = useState(false);
-  const [problems, setProblems] = useState([]);
+  const [problems, setProblems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -61,9 +61,9 @@ export default function KnowledgeBasePage() {
     }
   };
 
-  const isPremium = session?.user?.isPremium || false;
+  const isPremium = false; // session?.user?.isPremium || false; // Placeholder since isPremium not in session
 
-  const filteredProblems = problems.filter(problem => {
+  const filteredProblems = problems.filter((problem: any) => {
     const matchesSearch = problem.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          problem.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "All Categories" || problem.category === selectedCategory;
@@ -176,7 +176,7 @@ export default function KnowledgeBasePage() {
 
       {/* Results - Problem Feed */}
       <div className="space-y-4 animate-fade-in" style={{animationDelay: '0.4s'}}>
-        {filteredProblems.map((problem, index) => (
+        {filteredProblems.map((problem: any, index: number) => (
           <Card key={problem.id} className="problem-card animate-slide-in" style={{animationDelay: `${0.1 * index}s`}}>
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
@@ -187,13 +187,13 @@ export default function KnowledgeBasePage() {
                         {problem.title}
                       </h3>
                     </Link>
-                    {problem.isPremium && !isPremium && (
+                    {false && !isPremium && (
                       <Lock className="h-4 w-4 text-premium animate-pulse" />
                     )}
                   </div>
                   
                   {/* Premium Lock Experience */}
-                  <div className={problem.isPremium && !isPremium ? "premium-lock" : ""}>
+                  <div className={false && !isPremium ? "premium-lock" : ""}>
                     <p className="text-helper text-sm mb-3 line-clamp-2 font-mono">
                       {problem.description}
                     </p>

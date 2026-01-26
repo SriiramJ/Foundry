@@ -193,7 +193,7 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
           <div className="flex gap-2 mb-4">
             <Badge variant="default">{problem.category}</Badge>
             <Badge variant="default">{problem.stage}</Badge>
-            {problem.tags.map(tag => (
+            {problem.tags.map((tag: string) => (
               <Badge key={tag} variant="outline" className="text-xs">#{tag}</Badge>
             ))}
           </div>
@@ -209,7 +209,7 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
           <h2 className="text-h2">{problem.solutions.length} Solutions</h2>
         </div>
 
-        {problem.solutions.map((solution, index) => (
+        {problem.solutions.map((solution: any, index: number) => (
           <Card key={solution.id} className="card-hover animate-slide-in" style={{animationDelay: `${index * 0.1}s`}}>
             <CardHeader>
               <div className="flex items-start justify-between">
@@ -264,7 +264,7 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
                 <div className="mb-4">
                   <h4 className="font-medium mb-2">Action Steps:</h4>
                   <ol className="list-decimal list-inside space-y-2">
-                    {solution.actionSteps.map((step, stepIndex) => (
+                    {solution.actionSteps.map((step: string, stepIndex: number) => (
                       <li key={stepIndex} className="text-sm text-helper animate-fade-in" style={{animationDelay: `${stepIndex * 0.05}s`}}>
                         {step}
                       </li>
@@ -277,7 +277,7 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
                 <div>
                   <h4 className="font-medium mb-2">Recommended Tools:</h4>
                   <div className="flex gap-2">
-                    {solution.tools.map(tool => (
+                    {solution.tools.map((tool: string) => (
                       <Badge key={tool} variant="outline" className="text-xs">{tool}</Badge>
                     ))}
                   </div>

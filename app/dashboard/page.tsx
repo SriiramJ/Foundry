@@ -9,7 +9,7 @@ import Link from "next/link";
 import { Plus, MessageSquare, CheckCircle, TrendingUp, Star } from "lucide-react";
 
 function RecentActivity() {
-  const [activities, setActivities] = useState([]);
+  const [activities, setActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -85,7 +85,7 @@ function RecentActivity() {
 export default function DashboardPage() {
   const { data: session } = useSession();
   const [dashboardData, setDashboardData] = useState<any>(null);
-  const [recentProblems, setRecentProblems] = useState([]);
+  const [recentProblems, setRecentProblems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -101,6 +101,8 @@ export default function DashboardPage() {
       if (response.ok) {
         const data = await response.json();
         setDashboardData(data);
+      } else {
+        console.error('Failed to fetch dashboard data:', response.status);
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);

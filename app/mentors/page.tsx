@@ -24,7 +24,7 @@ export default function MentorsPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedExpertise, setSelectedExpertise] = useState("All Areas");
-  const [mentors, setMentors] = useState([]);
+  const [mentors, setMentors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export default function MentorsPage() {
     }
   };
 
-  const filteredMentors = mentors.filter(mentor => {
+  const filteredMentors = mentors.filter((mentor: any) => {
     const matchesSearch = mentor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          mentor.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          mentor.bio.toLowerCase().includes(searchTerm.toLowerCase());
@@ -129,7 +129,7 @@ export default function MentorsPage() {
             <div className="flex items-center">
               <CheckCircle className="h-8 w-8 text-success mr-3 transition-transform hover:scale-110" />
               <div>
-                <div className="text-2xl font-bold">{mentors.reduce((total, mentor) => total + mentor.solutionsCount, 0)}</div>
+                <div className="text-2xl font-bold">{mentors.reduce((total: number, mentor: any) => total + mentor.solutionsCount, 0)}</div>
                 <p className="text-sm text-helper">Solutions Provided</p>
               </div>
             </div>
@@ -141,7 +141,7 @@ export default function MentorsPage() {
             <div className="flex items-center">
               <Star className="h-8 w-8 text-warning mr-3 transition-transform hover:scale-110" />
               <div>
-                <div className="text-2xl font-bold">{mentors.length > 0 ? (mentors.reduce((total, mentor) => total + mentor.rating, 0) / mentors.length).toFixed(1) : '0.0'}</div>
+                <div className="text-2xl font-bold">{mentors.length > 0 ? (mentors.reduce((total: number, mentor: any) => total + mentor.rating, 0) / mentors.length).toFixed(1) : '0.0'}</div>
                 <p className="text-sm text-helper">Average Rating</p>
               </div>
             </div>
@@ -151,7 +151,7 @@ export default function MentorsPage() {
 
       {/* Mentors Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in" style={{animationDelay: '0.4s'}}>
-        {filteredMentors.map((mentor, index) => (
+        {filteredMentors.map((mentor: any, index: number) => (
           <Card key={mentor.id} className="hover:shadow-sm transition-all card-hover animate-slide-in" style={{animationDelay: `${0.1 * index}s`}}>
             <CardHeader>
               <div className="flex items-start justify-between">
@@ -181,7 +181,7 @@ export default function MentorsPage() {
               <p className="text-sm text-helper mb-4">{mentor.bio}</p>
               
               <div className="flex flex-wrap gap-1 mb-4">
-                {mentor.expertise.map((skill, skillIndex) => (
+                {mentor.expertise.map((skill: string, skillIndex: number) => (
                   <Badge key={skill} variant="default" className="text-xs animate-fade-in" style={{animationDelay: `${skillIndex * 0.1}s`}}>
                     {skill}
                   </Badge>

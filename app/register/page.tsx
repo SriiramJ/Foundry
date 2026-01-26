@@ -21,8 +21,12 @@ export default function RegisterPage() {
   const router = useRouter();
 
   const handleNext = () => {
-    if (!formData.name || !formData.email || !formData.password) {
+    if (!formData.name.trim() || !formData.email.trim() || !formData.password.trim()) {
       setError("Please fill in all fields");
+      return;
+    }
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters");
       return;
     }
     setError("");

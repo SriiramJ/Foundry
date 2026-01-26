@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils"
 
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "verified" | "premium"
+  variant?: "default" | "verified" | "premium" | "outline"
 }
 
 function Badge({ className, variant = "default", ...props }: BadgeProps) {
@@ -15,6 +15,7 @@ function Badge({ className, variant = "default", ...props }: BadgeProps) {
           "bg-muted text-muted-foreground": variant === "default",
           "bg-success text-success-foreground": variant === "verified",
           "bg-warning text-warning-foreground": variant === "premium",
+          "border border-border bg-transparent": variant === "outline",
         },
         className
       )}

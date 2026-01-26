@@ -35,6 +35,8 @@ export default function ApplyMentorPage() {
       if (response.ok) {
         const data = await response.json();
         setExistingApplication(data.application);
+      } else if (response.status !== 404) {
+        console.error('Failed to check application:', response.status);
       }
     } catch (error) {
       console.error('Failed to check application:', error);
@@ -45,6 +47,17 @@ export default function ApplyMentorPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.fullName.trim() || !formData.expertise.trim() || !formData.experience.trim() || !formData.background.trim() || !formData.proofOfWork.trim()) {
+      alert('Please fill in all fields');
+      return;
+    }
+    
+    if (parseInt(formData.experience) < 1) {
+      alert('Experience must be at least 1 year');
+      return;
+    }
+    
     setIsSubmitting(true);
 
     try {
@@ -55,7 +68,7 @@ export default function ApplyMentorPage() {
       });
 
       if (response.ok) {
-        router.push('/profile?message=Application submitted successfully');
+        router.push('/dashboard?message=Application submitted successfully');
       } else {
         const data = await response.json();
         alert(data.error || 'Failed to submit application');

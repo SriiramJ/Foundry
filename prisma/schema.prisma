@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "mongodb"
+  
   url      = env("DATABASE_URL")
 }
 
@@ -162,6 +163,7 @@ enum Role {
   EXPLORER
   BUILDER
   MENTOR
+  ADMIN
 }
 
 enum MentorApplicationStatus {

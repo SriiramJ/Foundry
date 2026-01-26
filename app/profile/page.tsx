@@ -140,8 +140,8 @@ export default function ProfilePage() {
                 <div className="mt-2 p-3 border border-border rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Mentor Application</span>
-                    <Badge variant={userData.mentorApplication.status === 'APPROVED' ? 'verified' : 'default'}>
-                      {userData.mentorApplication.status.replace('_', ' ')}
+                    <Badge variant={userData.mentorApplication.status === 'APPROVED' ? 'verified' : userData.mentorApplication.status === 'REJECTED' ? 'outline' : userData.mentorApplication.status === 'NEEDS_INFO' ? 'premium' : 'default'}>
+                      {userData.mentorApplication.status.replace('_', ' ').toLowerCase().replace(/\b\w/g, (l: string) => l.toUpperCase())}
                     </Badge>
                   </div>
                   <p className="text-xs text-helper">

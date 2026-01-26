@@ -26,8 +26,6 @@ export async function POST(request: NextRequest) {
       where: { id: session.user.id },
       data: {
         isPremium,
-        subscriptionTier,
-        subscriptionUpdatedAt: new Date()
       }
     });
 
@@ -37,7 +35,6 @@ export async function POST(request: NextRequest) {
       user: {
         id: updatedUser.id,
         isPremium: updatedUser.isPremium,
-        subscriptionTier: updatedUser.subscriptionTier
       }
     });
   } catch (error) {
