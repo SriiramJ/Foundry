@@ -55,6 +55,23 @@ model User {
   comments      Comment[]
   passwordResetTokens PasswordResetToken[]
   subscription  Subscription?
+  mentorApplication MentorApplication?
+}
+
+model MentorApplication {
+  id              String                    @id @default(auto()) @map("_id") @db.ObjectId
+  fullName        String
+  expertise       String
+  experience      Int
+  background      String
+  proofOfWork     String
+  status          MentorApplicationStatus  @default(PENDING)
+  reviewNotes     String?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  
+  user            User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String                   @unique @db.ObjectId
 }
 
 model Problem {
@@ -128,6 +145,7 @@ model Subscription {
   user      User             @relation(fields: [userId], references: [id])
   userId    String           @unique @db.ObjectId
 }
+
 model PasswordResetToken {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   token     String   @unique
@@ -140,11 +158,17 @@ model PasswordResetToken {
   @@map("password_reset_tokens")
 }
 
-
 enum Role {
   EXPLORER
   BUILDER
   MENTOR
+}
+
+enum MentorApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  NEEDS_INFO
 }
 
 enum Category {

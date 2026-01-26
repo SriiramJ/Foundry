@@ -26,6 +26,7 @@ export async function GET() {
           orderBy: { createdAt: "desc" },
           take: 5
         },
+        mentorApplication: true,
         _count: {
           select: {
             problems: true,

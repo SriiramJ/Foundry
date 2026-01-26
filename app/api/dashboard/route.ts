@@ -64,7 +64,12 @@ export async function GET() {
       prisma.solution.count({ where: { authorId: session.user.id } }),
       prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { reputation: true, isPremium: true }
+        select: { 
+          reputation: true, 
+          isPremium: true, 
+          role: true,
+          mentorApplication: true 
+        }
       })
     ]);
 
@@ -80,6 +85,8 @@ export async function GET() {
       solutionsReceived: totalSolutions,
       reputation: user?.reputation || 0,
       isPremium: user?.isPremium || false,
+      role: user?.role || 'EXPLORER',
+      mentorApplication: user?.mentorApplication || null,
       upvotesReceived: totalUpvotes,
       weeklyChanges: {
         problems: currentWeek[0] - previousWeek[0],

@@ -174,19 +174,6 @@ export default function RegisterPage() {
                       <div className="font-medium">Builder</div>
                       <div className="text-helper text-sm">Working on my startup, need specific help</div>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => selectRole("mentor")}
-                      className={`p-3 text-left border rounded-lg hover:bg-muted transition-all transform hover:scale-105 ${
-                        formData.role === "mentor" ? "border-accent bg-muted scale-105" : "border-border"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">Mentor</span>
-                        <Badge variant="verified" className="animate-pulse">Verified</Badge>
-                      </div>
-                      <div className="text-helper text-sm">Experienced entrepreneur, here to help</div>
-                    </button>
                   </div>
                 </div>
                 

@@ -40,6 +40,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate role
+    if (!['explorer', 'builder'].includes(role.toLowerCase())) {
+      return NextResponse.json(
+        { error: "Invalid role. Only Explorer and Builder roles are allowed during registration." },
+        { status: 400 }
+      );
+    }
+
     const existingUser = await prisma.user.findUnique({
       where: { email }
     });

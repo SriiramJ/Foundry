@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 import { User, Star, MessageSquare, CheckCircle, TrendingUp, Calendar, ArrowLeft } from "lucide-react";
 
 export default function ProfilePage() {
@@ -128,6 +129,26 @@ export default function ProfilePage() {
               <Button className="w-full mt-4 transform hover:scale-105 transition-all" variant="secondary">
                 Edit Profile
               </Button>
+              {userData.role !== "MENTOR" && !userData.mentorApplication && (
+                <Link href="/apply-mentor">
+                  <Button className="w-full mt-2 transform hover:scale-105 transition-all">
+                    Apply to become a Mentor
+                  </Button>
+                </Link>
+              )}
+              {userData.mentorApplication && (
+                <div className="mt-2 p-3 border border-border rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">Mentor Application</span>
+                    <Badge variant={userData.mentorApplication.status === 'APPROVED' ? 'verified' : 'default'}>
+                      {userData.mentorApplication.status.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-helper">
+                    Submitted on {new Date(userData.mentorApplication.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 

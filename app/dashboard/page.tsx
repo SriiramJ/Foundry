@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { Plus, MessageSquare, CheckCircle, TrendingUp } from "lucide-react";
+import { Plus, MessageSquare, CheckCircle, TrendingUp, Star } from "lucide-react";
 
 function RecentActivity() {
   const [activities, setActivities] = useState([]);
@@ -265,6 +265,14 @@ export default function DashboardPage() {
                   Find Mentors
                 </Button>
               </Link>
+              {dashboardData?.role !== "MENTOR" && !dashboardData?.mentorApplication && (
+                <Link href="/apply-mentor" className="block">
+                  <Button variant="outline" className="w-full justify-start transform hover:scale-105 transition-all font-mono border-border hover:border-accent/30">
+                    <Star className="mr-2 h-4 w-4" />
+                    Apply to become a Mentor
+                  </Button>
+                </Link>
+              )}
             </CardContent>
           </Card>
 
