@@ -51,6 +51,8 @@ export default function KnowledgeBasePage() {
       if (response.ok) {
         const data = await response.json();
         setProblems(data);
+      } else {
+        console.error('Failed to fetch problems:', response.statusText);
       }
     } catch (error) {
       console.error('Failed to fetch problems:', error);
@@ -62,8 +64,8 @@ export default function KnowledgeBasePage() {
   const isPremium = session?.user?.isPremium || false;
 
   const filteredProblems = problems.filter(problem => {
-    const matchesSearch = problem.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         problem.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = problem.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         problem.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "All Categories" || problem.category === selectedCategory;
     const matchesStage = selectedStage === "All Stages" || problem.stage === selectedStage;
     
@@ -75,7 +77,7 @@ export default function KnowledgeBasePage() {
       <div className="p-6 animate-fade-in">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent mx-auto"></div>
-          <p className="text-helper mt-2">Loading problems...</p>
+          <p className="text-helper mt-2 font-mono">Loading problems...</p>
         </div>
       </div>
     );
@@ -84,9 +86,9 @@ export default function KnowledgeBasePage() {
   return (
     <div className="p-6 animate-fade-in">
       <Button 
-        variant="secondary" 
+        variant="outline" 
         onClick={() => router.back()}
-        className="mb-6 transform hover:scale-105 transition-all"
+        className="mb-6 transform hover:scale-105 transition-all font-mono border-border hover:border-accent/30"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back
@@ -98,7 +100,7 @@ export default function KnowledgeBasePage() {
       </div>
 
       {/* Search and Filters */}
-      <Card className="mb-6 card-hover animate-scale-in" style={{animationDelay: '0.2s'}}>
+      <Card className="mb-6 problem-card animate-scale-in" style={{animationDelay: '0.2s'}}>
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
@@ -107,13 +109,13 @@ export default function KnowledgeBasePage() {
                 placeholder="Search problems and solutions..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 transition-all focus:scale-105"
+                className="pl-10 transition-all focus:scale-105 bg-input border-border font-mono"
               />
             </div>
             <Button
-              variant="secondary"
+              variant="outline"
               onClick={() => setShowFilters(!showFilters)}
-              className="transform hover:scale-105 transition-all"
+              className="transform hover:scale-105 transition-all font-mono border-border hover:border-accent/30"
             >
               <Filter className="mr-2 h-4 w-4" />
               Filters
@@ -123,11 +125,11 @@ export default function KnowledgeBasePage() {
           {showFilters && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-border animate-slide-in">
               <div>
-                <label className="text-sm font-medium mb-2 block">Category</label>
+                <label className="text-sm font-medium mb-2 block font-mono">Category</label>
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full p-2 border border-border rounded-lg transition-all hover:border-accent focus:border-accent"
+                  className="w-full p-2 border border-border bg-input text-foreground font-mono transition-all hover:border-accent focus:border-accent"
                 >
                   {categories.map(category => (
                     <option key={category} value={category}>{category}</option>
@@ -135,11 +137,11 @@ export default function KnowledgeBasePage() {
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">Startup Stage</label>
+                <label className="text-sm font-medium mb-2 block font-mono">Startup Stage</label>
                 <select
                   value={selectedStage}
                   onChange={(e) => setSelectedStage(e.target.value)}
-                  className="w-full p-2 border border-border rounded-lg transition-all hover:border-accent focus:border-accent"
+                  className="w-full p-2 border border-border bg-input text-foreground font-mono transition-all hover:border-accent focus:border-accent"
                 >
                   {stages.map(stage => (
                     <option key={stage} value={stage}>{stage}</option>
@@ -153,18 +155,18 @@ export default function KnowledgeBasePage() {
 
       {/* Premium Upgrade Banner */}
       {!isPremium && (
-        <Card className="mb-6 border-warning bg-warning/5 card-hover animate-fade-in" style={{animationDelay: '0.3s'}}>
+        <Card className="mb-6 border-premium bg-premium/5 problem-card animate-fade-in" style={{animationDelay: '0.3s'}}>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-medium mb-1">Unlock Full Knowledge Base</h3>
-                <p className="text-sm text-helper">
+                <h3 className="font-medium mb-1 font-sans">Unlock Expert Solutions – Go Premium</h3>
+                <p className="text-sm text-helper font-mono">
                   Get access to premium solutions, advanced filters, and detailed implementation guides.
                 </p>
               </div>
               <Link href="/upgrade">
-                <Button variant="secondary" className="transform hover:scale-105 transition-all">
-                  Upgrade Now
+                <Button className="btn-premium transform hover:scale-105 transition-all font-mono">
+                  Go Premium
                 </Button>
               </Link>
             </div>
@@ -172,29 +174,32 @@ export default function KnowledgeBasePage() {
         </Card>
       )}
 
-      {/* Results */}
+      {/* Results - Problem Feed */}
       <div className="space-y-4 animate-fade-in" style={{animationDelay: '0.4s'}}>
         {filteredProblems.map((problem, index) => (
-          <Card key={problem.id} className="hover:shadow-sm transition-all card-hover animate-slide-in" style={{animationDelay: `${0.1 * index}s`}}>
+          <Card key={problem.id} className="problem-card animate-slide-in" style={{animationDelay: `${0.1 * index}s`}}>
             <CardContent className="pt-6">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <Link href={`/problems/${problem.id}`}>
-                      <h3 className="font-medium hover:text-accent cursor-pointer transition-colors">
+                      <h3 className="font-medium hover:text-accent cursor-pointer transition-colors font-sans">
                         {problem.title}
                       </h3>
                     </Link>
                     {problem.isPremium && !isPremium && (
-                      <Lock className="h-4 w-4 text-warning animate-pulse" />
+                      <Lock className="h-4 w-4 text-premium animate-pulse" />
                     )}
                   </div>
                   
-                  <p className="text-helper text-sm mb-3 line-clamp-2">
-                    {problem.description}
-                  </p>
+                  {/* Premium Lock Experience */}
+                  <div className={problem.isPremium && !isPremium ? "premium-lock" : ""}>
+                    <p className="text-helper text-sm mb-3 line-clamp-2 font-mono">
+                      {problem.description}
+                    </p>
+                  </div>
                   
-                  <div className="flex items-center gap-4 text-sm text-helper">
+                  <div className="flex items-center gap-4 text-sm text-helper font-mono">
                     <div className="flex items-center gap-1">
                       <CheckCircle className="h-4 w-4 text-success" />
                       <span>{problem._count?.solutions || 0} solutions</span>
@@ -203,22 +208,22 @@ export default function KnowledgeBasePage() {
                       <TrendingUp className="h-4 w-4" />
                       <span>{problem.upvotes || 0} upvotes</span>
                     </div>
-                    <span>by {problem.createdBy.name}</span>
+                    <span>by {problem.createdBy?.name || 'Unknown'}</span>
                     <span>{new Date(problem.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
                 
                 <div className="flex flex-col items-end gap-2 ml-4">
-                  <Badge variant={problem.isSolved ? "verified" : "default"} className={problem.isSolved ? "animate-pulse" : ""}>
+                  <Badge className={problem.isSolved ? "verified-solution" : "tag-system"}>
                     {problem.isSolved ? "Solved" : "Open"}
                   </Badge>
                   <div className="flex gap-1">
-                    <Badge variant="default" className="text-xs">
-                      {problem.category}
-                    </Badge>
-                    <Badge variant="default" className="text-xs">
-                      {problem.stage}
-                    </Badge>
+                    <span className="tag-system">
+                      #{problem.category}
+                    </span>
+                    <span className="tag-system">
+                      #{problem.stage}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -228,11 +233,11 @@ export default function KnowledgeBasePage() {
       </div>
 
       {filteredProblems.length === 0 && (
-        <Card className="animate-fade-in">
+        <Card className="animate-fade-in problem-card">
           <CardContent className="pt-6 text-center">
             <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-pulse" />
-            <h3 className="font-medium mb-2">No problems found</h3>
-            <p className="text-helper">
+            <h3 className="font-medium mb-2 font-sans">No problems found</h3>
+            <p className="text-helper font-mono">
               Try adjusting your search terms or filters to find relevant content.
             </p>
           </CardContent>

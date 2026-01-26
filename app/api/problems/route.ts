@@ -36,6 +36,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(problem);
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: "Invalid input", details: error.errors }, { status: 400 });
+    }
+    console.error('Problem creation error:', error);
     return NextResponse.json({ error: "Failed to create problem" }, { status: 500 });
   }
 }
@@ -43,28 +47,28 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     const problems = await prisma.problem.findMany({
-      include: {
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        category: true,
+        stage: true,
+        tags: true,
+        createdAt: true,
         createdBy: { select: { name: true, role: true } },
-        solutions: { 
-          include: { 
-            author: { select: { name: true, role: true } },
-            votes: { where: { type: "UP" } }
+        _count: { 
+          select: { 
+            solutions: true
           } 
-        },
-        _count: { select: { solutions: true } }
+        }
       },
-      orderBy: { createdAt: "desc" }
+      orderBy: { createdAt: "desc" },
+      take: 100
     });
 
-    const problemsWithUpvotes = problems.map(problem => ({
-      ...problem,
-      upvotes: problem.solutions.reduce((total, solution) => 
-        total + solution.votes.length, 0
-      )
-    }));
-
-    return NextResponse.json(problemsWithUpvotes);
+    return NextResponse.json(problems.map(p => ({ ...p, upvotes: 0 })));
   } catch (error) {
+    console.error('Problems fetch error:', error);
     return NextResponse.json({ error: "Failed to fetch problems" }, { status: 500 });
   }
 }

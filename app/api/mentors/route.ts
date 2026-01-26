@@ -35,7 +35,8 @@ export async function GET() {
           }
         }
       },
-      orderBy: { reputation: "desc" }
+      orderBy: { reputation: "desc" },
+      take: 50
     });
 
     const mentorsWithStats = mentors.map((mentor, index) => {
@@ -45,7 +46,7 @@ export async function GET() {
       
       return {
         id: mentor.id,
-        name: mentor.name,
+        name: mentor.name || 'Anonymous',
         title: titles[index % titles.length],
         expertise: expertiseOptions.slice(index % 3, (index % 3) + 3),
         reputation: mentor.reputation,
@@ -60,6 +61,7 @@ export async function GET() {
 
     return NextResponse.json(mentorsWithStats);
   } catch (error) {
+    console.error('Mentors fetch error:', error);
     return NextResponse.json({ error: "Failed to fetch mentors" }, { status: 500 });
   }
 }

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const problem = await prisma.problem.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         createdBy: { select: { name: true, role: true } },
         solutions: {

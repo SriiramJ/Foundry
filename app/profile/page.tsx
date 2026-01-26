@@ -23,12 +23,14 @@ export default function ProfilePage() {
   const fetchUserData = async () => {
     try {
       const response = await fetch('/api/user');
-      if (response.ok) {
-        const data = await response.json();
-        setUserData(data);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch user data: ${response.status}`);
       }
+      const data = await response.json();
+      setUserData(data);
     } catch (error) {
       console.error('Failed to fetch user data:', error);
+      setUserData(null);
     } finally {
       setLoading(false);
     }

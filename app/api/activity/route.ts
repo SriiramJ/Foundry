@@ -49,7 +49,7 @@ export async function GET() {
       ...recentSolutions.map(solution => ({
         type: "solution_received",
         title: "New solution received",
-        description: solution.problem.title,
+        description: solution.problem?.title || 'Unknown problem',
         time: solution.createdAt,
         status: "success"
       })),
@@ -71,6 +71,7 @@ export async function GET() {
 
     return NextResponse.json(activities);
   } catch (error) {
+    console.error('Activity fetch error:', error);
     return NextResponse.json({ error: "Failed to fetch activity" }, { status: 500 });
   }
 }

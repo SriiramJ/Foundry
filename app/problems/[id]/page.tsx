@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, MessageSquare, ThumbsUp, ThumbsDown, User, Calendar, Star, X, Plus } from "lucide-react";
 
-export default function ProblemPage({ params }: { params: { id: string } }) {
+export default function ProblemPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const resolvedParams = use(params);
   const [problem, setProblem] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showSolutionForm, setShowSolutionForm] = useState(false);
@@ -23,11 +24,11 @@ export default function ProblemPage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     fetchProblem();
-  }, [params.id]);
+  }, [resolvedParams.id]);
 
   const fetchProblem = async () => {
     try {
-      const response = await fetch(`/api/problems/${params.id}`);
+      const response = await fetch(`/api/problems/${resolvedParams.id}`);
       if (response.ok) {
         const data = await response.json();
         setProblem(data);
@@ -115,7 +116,7 @@ export default function ProblemPage({ params }: { params: { id: string } }) {
           content: solutionForm.content,
           actionSteps: solutionForm.actionSteps.filter(step => step.trim()),
           tools: solutionForm.tools.filter(tool => tool.trim()),
-          problemId: params.id
+          problemId: resolvedParams.id
         })
       });
       
@@ -171,8 +172,8 @@ export default function ProblemPage({ params }: { params: { id: string } }) {
               <div className="flex items-center gap-4 text-sm text-helper mb-4">
                 <div className="flex items-center gap-1">
                   <User className="h-4 w-4" />
-                  <span>{problem.author.name}</span>
-                  <Badge variant="default" className="text-xs">{problem.author.role}</Badge>
+                  <span>{problem.createdBy.name}</span>
+                  <Badge variant="default" className="text-xs">{problem.createdBy.role}</Badge>
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />

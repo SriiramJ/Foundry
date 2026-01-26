@@ -39,7 +39,6 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Calculate additional stats
     const upvotesReceived = user.solutions.reduce((total, solution) => 
       total + solution.votes.filter(v => v.type === "UP").length, 0
     );
@@ -52,6 +51,7 @@ export async function GET() {
       verifiedSolutions
     });
   } catch (error) {
+    console.error('User fetch error:', error);
     return NextResponse.json({ error: "Failed to fetch user data" }, { status: 500 });
   }
 }

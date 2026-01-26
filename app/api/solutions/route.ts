@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const createSolutionSchema = z.object({
-  content: z.string().min(20),
+  content: z.string().min(10),
   actionSteps: z.array(z.string()).optional(),
   tools: z.array(z.string()).optional(),
   problemId: z.string()
@@ -36,6 +36,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(solution);
   } catch (error) {
+    console.error('Solution creation error:', error);
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: "Invalid input", details: error.errors }, { status: 400 });
+    }
+    
     return NextResponse.json({ error: "Failed to create solution" }, { status: 500 });
   }
 }

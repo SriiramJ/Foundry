@@ -1,6 +1,11 @@
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/theme-provider";
+import { Sun, Moon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { 
   Home, 
   Plus, 
@@ -20,14 +25,23 @@ const navigation = [
 ]
 
 export function Sidebar() {
-  const pathname = usePathname()
+  const pathname = usePathname();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="flex h-full w-64 flex-col border-r border-border bg-background animate-slide-in">
-      <div className="flex h-16 items-center px-6 border-b border-border">
-        <Link href="/dashboard" className="text-h3 font-bold hover:text-accent transition-colors">
+      <div className="flex h-16 items-center justify-between px-6 border-b border-border">
+        <Link href="/dashboard" className="text-h3 font-bold text-accent hover:text-accent/80 transition-colors font-sans tracking-tight">
           Foundry
         </Link>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={toggleTheme}
+          className="transform hover:scale-105 transition-all font-mono border border-border hover:border-accent/30"
+        >
+          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </Button>
       </div>
       
       <nav className="flex-1 space-y-1 px-4 py-6">
@@ -38,10 +52,10 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                "flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all transform hover:scale-105 animate-fade-in",
+                "flex items-center px-3 py-2 rounded-lg border border-transparent text-sm font-medium transition-all transform hover:scale-105 animate-fade-in",
                 isActive
-                  ? "bg-muted text-foreground scale-105"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  ? "bg-accent/10 text-accent border-accent/30 scale-105"
+                  : "text-muted-foreground hover:bg-muted/50 hover:text-accent hover:border-accent/20"
               )}
               style={{animationDelay: `${index * 0.1}s`}}
             >

@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const isPremium = planId !== "free";
     const subscriptionTier = planId.toUpperCase();
 
-    await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
       data: {
         isPremium,
@@ -33,9 +33,17 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ 
       success: true, 
-      message: `Successfully upgraded to ${planId} plan` 
+      message: `Successfully upgraded to ${planId} plan`,
+      user: {
+        id: updatedUser.id,
+        isPremium: updatedUser.isPremium,
+        subscriptionTier: updatedUser.subscriptionTier
+      }
     });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: "Invalid plan selection", details: error.errors }, { status: 400 });
+    }
     return NextResponse.json({ error: "Failed to process upgrade" }, { status: 500 });
   }
 }

@@ -49,7 +49,7 @@ function RecentActivity() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'success': return 'bg-success';
-      case 'warning': return 'bg-warning';
+      case 'warning': return 'bg-premium';
       default: return 'bg-accent';
     }
   };
@@ -70,13 +70,13 @@ function RecentActivity() {
         <div key={index} className="flex items-start space-x-3 animate-slide-in" style={{animationDelay: `${index * 0.1}s`}}>
           <div className={`w-2 h-2 ${getStatusColor(activity.status)} rounded-full mt-2 ${activity.status === 'success' ? 'animate-pulse' : ''}`}></div>
           <div>
-            <p className="text-sm font-medium">{activity.title}</p>
-            <p className="text-xs text-helper">{activity.description}</p>
-            <p className="text-xs text-helper">{formatTimeAgo(activity.time)}</p>
+            <p className="text-sm font-medium font-mono">{activity.title}</p>
+            <p className="text-xs text-helper font-mono">{activity.description}</p>
+            <p className="text-xs text-helper font-mono">{formatTimeAgo(activity.time)}</p>
           </div>
         </div>
       )) : (
-        <p className="text-helper text-center">No recent activity</p>
+        <p className="text-helper text-center font-mono">No recent activity</p>
       )}
     </div>
   );
@@ -126,138 +126,159 @@ export default function DashboardPage() {
       <div className="p-6 animate-fade-in">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent mx-auto"></div>
-          <p className="text-helper mt-2">Loading dashboard...</p>
+          <p className="text-helper mt-2 font-mono">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 animate-fade-in">
-      <div className="mb-8 animate-slide-in">
+    <div className="p-3 sm:p-6 animate-fade-in">
+      <div className="mb-6 sm:mb-8 animate-slide-in">
         <h1 className="text-h1 mb-2">Welcome back, {session?.user?.name}</h1>
-        <p className="text-body">Here&apos;s what&apos;s happening in your entrepreneurial journey.</p>
+        <p className="text-body">Here's what's happening in your entrepreneurial journey.</p>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 stagger-children">
-        <Card className="card-hover">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Problems Posted</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground transition-transform hover:scale-110" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardData?.problemsPosted || 0}</div>
-            <p className="text-xs text-muted-foreground">+1 from last week</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="card-hover">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Solutions Received</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground transition-transform hover:scale-110" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardData?.solutionsReceived || 0}</div>
-            <p className="text-xs text-muted-foreground">+4 from last week</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="card-hover">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Reputation Points</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground transition-transform hover:scale-110" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboardData?.reputation || 0}</div>
-            <p className="text-xs text-muted-foreground">+23 from last week</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="card-hover">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Account Status</CardTitle>
-            <Badge variant="default">{dashboardData?.isPremium ? 'Premium' : 'Free'}</Badge>
-          </CardHeader>
-          <CardContent>
-            <Link href="/upgrade">
-              <Button variant="secondary" size="sm" className="transform hover:scale-105 transition-transform">Upgrade</Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 animate-fade-in" style={{animationDelay: '0.3s'}}>
-        <Card className="card-hover">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Get started with common tasks</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3 p-6">
-            <Link href="/post-problem" className="block">
-              <Button className="w-full justify-start transform hover:scale-105 transition-all" variant="secondary">
-                <Plus className="mr-2 h-4 w-4" />
-                Post a New Problem
-              </Button>
-            </Link>
-            <Link href="/knowledge-base" className="block">
-              <Button className="w-full justify-start transform hover:scale-105 transition-all" variant="secondary">
-                <MessageSquare className="mr-2 h-4 w-4" />
-                Browse Knowledge Base
-              </Button>
-            </Link>
-            <Link href="/mentors" className="block">
-              <Button className="w-full justify-start transform hover:scale-105 transition-all" variant="secondary">
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Find Mentors
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        <Card className="card-hover">
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Your latest interactions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <RecentActivity />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Problems */}
-      <Card className="card-hover animate-fade-in" style={{animationDelay: '0.5s'}}>
-        <CardHeader>
-          <CardTitle>Your Recent Problems</CardTitle>
-          <CardDescription>Problems you&apos;ve posted recently</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {recentProblems.map((problem: any, index: number) => (
-              <div key={problem.id} className="border border-border rounded-lg p-4 hover:bg-muted/50 transition-colors animate-slide-in" style={{animationDelay: `${index * 0.1}s`}}>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="font-medium">{problem.title}</h3>
-                    <p className="text-sm text-helper mt-1">Posted in {problem.category} • {new Date(problem.createdAt).toLocaleDateString()}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Badge variant="default">{problem.stage}</Badge>
-                      <span className="text-sm text-helper">{problem._count?.solutions || 0} solutions</span>
-                    </div>
-                  </div>
-                  <Badge variant={problem.isSolved ? "verified" : "default"} className={problem.isSolved ? "animate-pulse" : ""}>
-                    {problem.isSolved ? "Solved" : "Open"}
+      {/* Responsive Layout */}
+      <div className="space-y-6 lg:grid lg:grid-cols-12 lg:gap-8 lg:space-y-0 mb-8">
+        {/* Stats Cards */}
+        <div className="lg:col-span-8 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 stagger-children">
+            <Card className="problem-card">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Problems Posted</CardTitle>
+                  <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-2xl font-bold text-foreground">{dashboardData?.problemsPosted || 0}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {dashboardData?.weeklyChanges?.problems > 0 ? '+' : ''}{dashboardData?.weeklyChanges?.problems || 0} from last week
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="problem-card">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Solutions Received</CardTitle>
+                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-2xl font-bold text-foreground">{dashboardData?.solutionsReceived || 0}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {dashboardData?.weeklyChanges?.solutions > 0 ? '+' : ''}{dashboardData?.weeklyChanges?.solutions || 0} from last week
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="problem-card">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Reputation Points</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-2xl font-bold text-foreground">{dashboardData?.reputation || 0}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {dashboardData?.weeklyChanges?.reputation > 0 ? '+' : ''}{dashboardData?.weeklyChanges?.reputation || 0} from last week
+                </p>
+              </CardContent>
+            </Card>
+            
+            <Card className="problem-card">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Account Status</CardTitle>
+                  <Badge className={`${dashboardData?.isPremium ? 'mentor-badge' : 'bg-muted/50 text-muted-foreground border border-border'} text-xs`}>
+                    {dashboardData?.isPremium ? 'Premium' : 'Free'}
                   </Badge>
                 </div>
-              </div>
-            ))}
-            {recentProblems.length === 0 && (
-              <p className="text-helper text-center">No problems posted yet</p>
-            )}
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Link href="/upgrade">
+                  <Button className="btn-premium text-xs w-full">Upgrade</Button>
+                </Link>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Recent Problems */}
+          <Card className="problem-card animate-fade-in" style={{animationDelay: '0.5s'}}>
+            <CardHeader>
+              <CardTitle className="font-sans">Your Recent Problems</CardTitle>
+              <CardDescription className="font-mono">Problems you've posted recently</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentProblems.map((problem: any, index: number) => (
+                  <div key={problem.id} className="border border-border p-4 hover:bg-muted/50 transition-colors animate-slide-in" style={{animationDelay: `${index * 0.1}s`}}>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="font-medium font-sans">{problem.title}</h3>
+                        <p className="text-sm text-helper mt-1 font-mono">Posted in {problem.category} • {new Date(problem.createdAt).toLocaleDateString()}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="tag-system">{problem.stage}</span>
+                          <span className="text-sm text-helper font-mono">{problem._count?.solutions || 0} solutions</span>
+                        </div>
+                      </div>
+                      <Badge className={problem.isSolved ? "verified-solution" : "tag-system"}>
+                        {problem.isSolved ? "Solved" : "Open"}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+                {recentProblems.length === 0 && (
+                  <p className="text-helper text-center font-mono">No problems posted yet</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column - User Quick-Stats & Actions */}
+        <div className="lg:col-span-4 space-y-6 animate-fade-in" style={{animationDelay: '0.3s'}}>
+          <Card className="problem-card">
+            <CardHeader>
+              <CardTitle className="font-sans">Quick Actions</CardTitle>
+              <CardDescription className="font-mono">Get started with common tasks</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 p-6">
+              <Link href="/post-problem" className="block">
+                <Button className="w-full justify-start btn-primary transform hover:scale-105 transition-all font-mono">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Post a New Problem
+                </Button>
+              </Link>
+              <Link href="/knowledge-base" className="block">
+                <Button variant="outline" className="w-full justify-start transform hover:scale-105 transition-all font-mono border-border hover:border-accent/30">
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Browse Knowledge Base
+                </Button>
+              </Link>
+              <Link href="/mentors" className="block">
+                <Button variant="outline" className="w-full justify-start transform hover:scale-105 transition-all font-mono border-border hover:border-accent/30">
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Find Mentors
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="problem-card">
+            <CardHeader>
+              <CardTitle className="font-sans">Recent Activity</CardTitle>
+              <CardDescription className="font-mono">Your latest interactions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RecentActivity />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

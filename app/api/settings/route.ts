@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const updateSettingsSchema = z.object({
-  name: z.string().min(1).optional(),
+  name: z.string().min(1).max(100).optional(),
   email: z.string().email().optional(),
   notifications: z.object({
     newSolutions: z.boolean(),
@@ -44,6 +44,9 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(updatedUser);
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: "Invalid input data", details: error.errors }, { status: 400 });
+    }
     return NextResponse.json({ error: "Failed to update settings" }, { status: 500 });
   }
 }
