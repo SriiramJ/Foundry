@@ -4,6 +4,7 @@ generator client {
 
 datasource db {
   provider = "mongodb"
+  
   url      = env("DATABASE_URL")
 }
 
@@ -53,7 +54,25 @@ model User {
   solutions     Solution[]
   votes         Vote[]
   comments      Comment[]
+  passwordResetTokens PasswordResetToken[]
   subscription  Subscription?
+  mentorApplication MentorApplication?
+}
+
+model MentorApplication {
+  id              String                    @id @default(auto()) @map("_id") @db.ObjectId
+  fullName        String
+  expertise       String
+  experience      Int
+  background      String
+  proofOfWork     String
+  status          MentorApplicationStatus  @default(PENDING)
+  reviewNotes     String?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  
+  user            User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String                   @unique @db.ObjectId
 }
 
 model Problem {
@@ -128,10 +147,30 @@ model Subscription {
   userId    String           @unique @db.ObjectId
 }
 
+model PasswordResetToken {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  token     String   @unique
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("password_reset_tokens")
+}
+
 enum Role {
   EXPLORER
   BUILDER
   MENTOR
+  ADMIN
+}
+
+enum MentorApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  NEEDS_INFO
 }
 
 enum Category {

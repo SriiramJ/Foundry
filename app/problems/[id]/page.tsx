@@ -1,45 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, MessageSquare, ThumbsUp, User, Calendar, Star, X, Plus } from "lucide-react";
+import { ArrowLeft, MessageSquare, ThumbsUp, ThumbsDown, User, Calendar, Star, X, Plus } from "lucide-react";
 
-const mockProblem = {
-  id: "1",
-  title: "How to validate product-market fit for B2B SaaS?",
-  description: "I've built an MVP for a B2B project management tool, but I'm struggling to determine if I have real product-market fit. We have 50 beta users, but only 20% are actively using it weekly. The feedback is mixed - some love it, others find it confusing. How do I know if I should pivot or keep iterating on the current solution?",
-  category: "Product Development",
-  stage: "MVP Stage",
-  tags: ["product-market-fit", "b2b-saas", "validation"],
-  isSolved: true,
-  createdAt: "2024-01-15",
-  author: { name: "Sarah Chen", role: "BUILDER" },
-  upvotes: 23,
-  solutions: [
-    {
-      id: "1",
-      content: "Product-market fit for B2B SaaS is tricky, but here's a systematic approach that worked for me:",
-      actionSteps: [
-        "Define your success metrics: For B2B SaaS, focus on weekly active users, feature adoption, and customer retention rather than just signups",
-        "Conduct user interviews: Talk to both active and inactive users. Ask specific questions about their workflow and pain points",
-        "Implement cohort analysis: Track user behavior over time to identify patterns in engagement and churn"
-      ],
-      tools: ["Mixpanel", "Hotjar", "Calendly"],
-      isVerified: true,
-      upvotes: 15,
-      author: { name: "Mike Rodriguez", role: "MENTOR", reputation: 1890 },
-      createdAt: "2024-01-15"
-    }
-  ]
-};
-
-export default function ProblemPage({ params }: { params: { id: string } }) {
+export default function ProblemPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
-  const [problem] = useState(mockProblem);
+  const resolvedParams = use(params);
+  const [problem, setProblem] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [showSolutionForm, setShowSolutionForm] = useState(false);
   const [solutionForm, setSolutionForm] = useState({
     content: "",
@@ -47,6 +20,49 @@ export default function ProblemPage({ params }: { params: { id: string } }) {
     tools: [""]
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [votes, setVotes] = useState<{[key: string]: 'up' | 'down' | null}>({});
+
+  useEffect(() => {
+    fetchProblem();
+  }, [resolvedParams.id]);
+
+  const fetchProblem = async () => {
+    try {
+      const response = await fetch(`/api/problems/${resolvedParams.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setProblem(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch problem:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVote = async (solutionId: string, voteType: 'up' | 'down') => {
+    try {
+      const response = await fetch('/api/votes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          solutionId, 
+          type: voteType.toUpperCase() 
+        })
+      });
+      
+      if (response.ok) {
+        const currentVote = votes[solutionId];
+        const newVote = currentVote === voteType ? null : voteType;
+        setVotes(prev => ({ ...prev, [solutionId]: newVote }));
+        
+        // Refresh problem data to get updated vote counts
+        fetchProblem();
+      }
+    } catch (error) {
+      console.error('Failed to vote:', error);
+    }
+  };
 
   const addActionStep = () => {
     setSolutionForm(prev => ({
@@ -92,17 +108,53 @@ export default function ProblemPage({ params }: { params: { id: string } }) {
 
   const handleSubmitSolution = async () => {
     setIsSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/solutions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: solutionForm.content,
+          actionSteps: solutionForm.actionSteps.filter(step => step.trim()),
+          tools: solutionForm.tools.filter(tool => tool.trim()),
+          problemId: resolvedParams.id
+        })
+      });
+      
+      if (response.ok) {
+        setShowSolutionForm(false);
+        setSolutionForm({ content: "", actionSteps: [""], tools: [""] });
+        fetchProblem(); // Refresh to show new solution
+      }
+    } catch (error) {
+      console.error('Failed to submit solution:', error);
+    } finally {
       setIsSubmitting(false);
-      setShowSolutionForm(false);
-      setSolutionForm({ content: "", actionSteps: [""], tools: [""] });
-      alert("Solution submitted successfully!");
-    }, 1000);
+    }
   };
 
   return (
     <div className="p-6 max-w-4xl mx-auto animate-fade-in">
+      {loading ? (
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent mx-auto"></div>
+          <p className="text-helper mt-2">Loading problem...</p>
+        </div>
+      ) : !problem ? (
+        <div>
+          <Button 
+            variant="secondary" 
+            onClick={() => router.back()}
+            className="mb-6 transform hover:scale-105 transition-all"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
+          <div className="text-center">
+            <p className="text-helper">Problem not found</p>
+          </div>
+        </div>
+      ) : (
+        <div>
       <Button 
         variant="secondary" 
         onClick={() => router.back()}
@@ -120,8 +172,8 @@ export default function ProblemPage({ params }: { params: { id: string } }) {
               <div className="flex items-center gap-4 text-sm text-helper mb-4">
                 <div className="flex items-center gap-1">
                   <User className="h-4 w-4" />
-                  <span>{problem.author.name}</span>
-                  <Badge variant="default" className="text-xs">{problem.author.role}</Badge>
+                  <span>{problem.createdBy.name}</span>
+                  <Badge variant="default" className="text-xs">{problem.createdBy.role}</Badge>
                 </div>
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
@@ -141,7 +193,7 @@ export default function ProblemPage({ params }: { params: { id: string } }) {
           <div className="flex gap-2 mb-4">
             <Badge variant="default">{problem.category}</Badge>
             <Badge variant="default">{problem.stage}</Badge>
-            {problem.tags.map(tag => (
+            {problem.tags.map((tag: string) => (
               <Badge key={tag} variant="outline" className="text-xs">#{tag}</Badge>
             ))}
           </div>
@@ -157,7 +209,7 @@ export default function ProblemPage({ params }: { params: { id: string } }) {
           <h2 className="text-h2">{problem.solutions.length} Solutions</h2>
         </div>
 
-        {problem.solutions.map((solution, index) => (
+        {problem.solutions.map((solution: any, index: number) => (
           <Card key={solution.id} className="card-hover animate-slide-in" style={{animationDelay: `${index * 0.1}s`}}>
             <CardHeader>
               <div className="flex items-start justify-between">
@@ -183,10 +235,26 @@ export default function ProblemPage({ params }: { params: { id: string } }) {
                     </div>
                   </div>
                 </div>
-                <Button variant="secondary" size="sm" className="transform hover:scale-105 transition-all">
-                  <ThumbsUp className="h-4 w-4 mr-1" />
-                  {solution.upvotes}
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button 
+                    variant={votes[solution.id] === 'up' ? "default" : "secondary"} 
+                    size="sm" 
+                    onClick={() => handleVote(solution.id, 'up')}
+                    className="transform hover:scale-105 transition-all"
+                  >
+                    <ThumbsUp className="h-4 w-4 mr-1" />
+                    {solution.upvotes}
+                  </Button>
+                  <Button 
+                    variant={votes[solution.id] === 'down' ? "default" : "secondary"} 
+                    size="sm" 
+                    onClick={() => handleVote(solution.id, 'down')}
+                    className="transform hover:scale-105 transition-all"
+                  >
+                    <ThumbsDown className="h-4 w-4 mr-1" />
+                    {solution.downvotes}
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -196,7 +264,7 @@ export default function ProblemPage({ params }: { params: { id: string } }) {
                 <div className="mb-4">
                   <h4 className="font-medium mb-2">Action Steps:</h4>
                   <ol className="list-decimal list-inside space-y-2">
-                    {solution.actionSteps.map((step, stepIndex) => (
+                    {solution.actionSteps.map((step: string, stepIndex: number) => (
                       <li key={stepIndex} className="text-sm text-helper animate-fade-in" style={{animationDelay: `${stepIndex * 0.05}s`}}>
                         {step}
                       </li>
@@ -209,7 +277,7 @@ export default function ProblemPage({ params }: { params: { id: string } }) {
                 <div>
                   <h4 className="font-medium mb-2">Recommended Tools:</h4>
                   <div className="flex gap-2">
-                    {solution.tools.map(tool => (
+                    {solution.tools.map((tool: string) => (
                       <Badge key={tool} variant="outline" className="text-xs">{tool}</Badge>
                     ))}
                   </div>
@@ -365,6 +433,8 @@ export default function ProblemPage({ params }: { params: { id: string } }) {
               </div>
             </CardContent>
           </Card>
+        </div>
+      )}
         </div>
       )}
     </div>

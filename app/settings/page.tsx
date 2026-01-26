@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,10 +12,14 @@ import { User, Bell, Shield, CreditCard, LogOut, ArrowLeft } from "lucide-react"
 export default function SettingsPage() {
   const { data: session } = useSession();
   const router = useRouter();
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordEmail, setPasswordEmail] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: session?.user?.name || "",
-    email: session?.user?.email || "",
+    name: "",
+    email: "",
     notifications: {
       newSolutions: true,
       mentorResponses: true,
@@ -23,17 +27,81 @@ export default function SettingsPage() {
     }
   });
 
+  useEffect(() => {
+    if (session?.user) {
+      setFormData({
+        name: session.user.name || "",
+        email: session.user.email || "",
+        notifications: {
+          newSolutions: true,
+          mentorResponses: true,
+          weeklyDigest: false,
+        }
+      });
+    }
+  }, [session]);
+
   const handleSave = async () => {
     setIsLoading(true);
-    // In a real app, this would save to the database
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const response = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save settings');
+      }
+      
       alert("Settings saved successfully!");
-    }, 1000);
+    } catch (error) {
+      console.error('Settings save error:', error);
+      alert(error instanceof Error ? error.message : "Error saving settings");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSignOut = () => {
     signOut({ callbackUrl: "/" });
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordLoading(true);
+    setPasswordMessage("");
+    
+    try {
+      const response = await fetch('/api/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: passwordEmail || session?.user?.email })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setPasswordMessage("Password reset email sent! Check your inbox.");
+        setTimeout(() => setShowPasswordModal(false), 3000);
+      } else {
+        setPasswordMessage(data.error || "Failed to send reset email");
+      }
+    } catch (error) {
+      setPasswordMessage("Error sending reset email");
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const handleEnable2FA = async () => {
+    try {
+      // Placeholder for 2FA setup functionality
+      alert("2FA setup functionality coming soon!");
+    } catch (error) {
+      console.error('2FA setup error:', error);
+      alert("Failed to enable 2FA");
+    }
   };
 
   return (
@@ -173,14 +241,14 @@ export default function SettingsPage() {
                 <p className="font-medium">Password</p>
                 <p className="text-sm text-helper">Last changed 30 days ago</p>
               </div>
-              <Button variant="secondary" className="transform hover:scale-105 transition-all">Change Password</Button>
+              <Button variant="secondary" onClick={() => setShowPasswordModal(true)} className="transform hover:scale-105 transition-all">Change Password</Button>
             </div>
             <div className="flex items-center justify-between animate-slide-in" style={{animationDelay: '0.1s'}}>
               <div>
                 <p className="font-medium">Two-Factor Authentication</p>
                 <p className="text-sm text-helper">Add an extra layer of security to your account</p>
               </div>
-              <Button variant="secondary" className="transform hover:scale-105 transition-all">Enable 2FA</Button>
+              <Button variant="secondary" onClick={handleEnable2FA} className="transform hover:scale-105 transition-all">Enable 2FA</Button>
             </div>
           </CardContent>
         </Card>
@@ -234,6 +302,51 @@ export default function SettingsPage() {
           </Button>
         </div>
       </div>
+
+      {/* Password Change Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md problem-card">
+            <CardHeader>
+              <CardTitle>Change Password</CardTitle>
+              <CardDescription>We'll send a reset link to your email</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {passwordMessage && (
+                <div className={`p-3 text-sm rounded mb-4 ${
+                  passwordMessage.includes('sent') ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'
+                }`}>
+                  {passwordMessage}
+                </div>
+              )}
+              <div className="space-y-4">
+                <Input
+                  type="email"
+                  placeholder="Confirm your email"
+                  value={passwordEmail}
+                  onChange={(e) => setPasswordEmail(e.target.value)}
+                />
+                <div className="flex gap-2">
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowPasswordModal(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleChangePassword}
+                    disabled={passwordLoading}
+                    className="flex-1 btn-primary"
+                  >
+                    {passwordLoading ? "Sending..." : "Send Reset Link"}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

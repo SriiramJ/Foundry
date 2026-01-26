@@ -1,68 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Search, Star, MessageCircle, CheckCircle, Users, ArrowLeft } from "lucide-react";
-
-// Mock mentor data
-const mockMentors = [
-  {
-    id: "1",
-    name: "Sarah Chen",
-    title: "Former VP of Product at Stripe",
-    expertise: ["Product Development", "Strategy", "Fundraising"],
-    reputation: 2450,
-    solutionsCount: 89,
-    rating: 4.9,
-    responseTime: "< 2 hours",
-    bio: "10+ years building products at scale. Helped 50+ startups with product-market fit and growth strategies.",
-    isPremium: true,
-    isVerified: true
-  },
-  {
-    id: "2",
-    name: "Marcus Rodriguez",
-    title: "Serial Entrepreneur & Angel Investor",
-    expertise: ["Fundraising", "Strategy", "Operations"],
-    reputation: 1890,
-    solutionsCount: 67,
-    rating: 4.8,
-    responseTime: "< 4 hours",
-    bio: "Founded 3 companies (2 exits). Now helping early-stage founders navigate the startup journey.",
-    isPremium: true,
-    isVerified: true
-  },
-  {
-    id: "3",
-    name: "Alex Thompson",
-    title: "Head of Engineering at Notion",
-    expertise: ["Technology", "Hiring", "Operations"],
-    reputation: 1650,
-    solutionsCount: 45,
-    rating: 4.7,
-    responseTime: "< 6 hours",
-    bio: "Built engineering teams from 5 to 150+ people. Expert in scaling technical organizations.",
-    isPremium: false,
-    isVerified: true
-  },
-  {
-    id: "4",
-    name: "Lisa Park",
-    title: "Growth Marketing Expert",
-    expertise: ["Marketing", "Strategy"],
-    reputation: 1200,
-    solutionsCount: 78,
-    rating: 4.6,
-    responseTime: "< 8 hours",
-    bio: "Scaled user acquisition for 20+ B2B SaaS companies. Specialized in product-led growth.",
-    isPremium: false,
-    isVerified: true
-  }
-];
 
 const expertiseAreas = [
   "All Areas",
@@ -80,9 +24,28 @@ export default function MentorsPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedExpertise, setSelectedExpertise] = useState("All Areas");
-  const [mentors] = useState(mockMentors);
+  const [mentors, setMentors] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredMentors = mentors.filter(mentor => {
+  useEffect(() => {
+    fetchMentors();
+  }, []);
+
+  const fetchMentors = async () => {
+    try {
+      const response = await fetch('/api/mentors');
+      if (response.ok) {
+        const data = await response.json();
+        setMentors(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch mentors:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredMentors = mentors.filter((mentor: any) => {
     const matchesSearch = mentor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          mentor.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          mentor.bio.toLowerCase().includes(searchTerm.toLowerCase());
@@ -91,6 +54,17 @@ export default function MentorsPage() {
     
     return matchesSearch && matchesExpertise;
   });
+
+  if (loading) {
+    return (
+      <div className="p-6 animate-fade-in">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent mx-auto"></div>
+          <p className="text-helper mt-2">Loading mentors...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 animate-fade-in">
@@ -155,7 +129,7 @@ export default function MentorsPage() {
             <div className="flex items-center">
               <CheckCircle className="h-8 w-8 text-success mr-3 transition-transform hover:scale-110" />
               <div>
-                <div className="text-2xl font-bold">279</div>
+                <div className="text-2xl font-bold">{mentors.reduce((total: number, mentor: any) => total + mentor.solutionsCount, 0)}</div>
                 <p className="text-sm text-helper">Solutions Provided</p>
               </div>
             </div>
@@ -167,7 +141,7 @@ export default function MentorsPage() {
             <div className="flex items-center">
               <Star className="h-8 w-8 text-warning mr-3 transition-transform hover:scale-110" />
               <div>
-                <div className="text-2xl font-bold">4.8</div>
+                <div className="text-2xl font-bold">{mentors.length > 0 ? (mentors.reduce((total: number, mentor: any) => total + mentor.rating, 0) / mentors.length).toFixed(1) : '0.0'}</div>
                 <p className="text-sm text-helper">Average Rating</p>
               </div>
             </div>
@@ -177,7 +151,7 @@ export default function MentorsPage() {
 
       {/* Mentors Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in" style={{animationDelay: '0.4s'}}>
-        {filteredMentors.map((mentor, index) => (
+        {filteredMentors.map((mentor: any, index: number) => (
           <Card key={mentor.id} className="hover:shadow-sm transition-all card-hover animate-slide-in" style={{animationDelay: `${0.1 * index}s`}}>
             <CardHeader>
               <div className="flex items-start justify-between">
@@ -207,7 +181,7 @@ export default function MentorsPage() {
               <p className="text-sm text-helper mb-4">{mentor.bio}</p>
               
               <div className="flex flex-wrap gap-1 mb-4">
-                {mentor.expertise.map((skill, skillIndex) => (
+                {mentor.expertise.map((skill: string, skillIndex: number) => (
                   <Badge key={skill} variant="default" className="text-xs animate-fade-in" style={{animationDelay: `${skillIndex * 0.1}s`}}>
                     {skill}
                   </Badge>

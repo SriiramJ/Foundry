@@ -18,6 +18,17 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
+        // Admin login
+        if (credentials.email === process.env.ADMIN_EMAIL && 
+            credentials.password === process.env.ADMIN_PASSWORD) {
+          return {
+            id: 'admin',
+            email: credentials.email,
+            name: 'Admin',
+            role: 'ADMIN',
+          }
+        }
+
         const user = await prisma.user.findUnique({
           where: {
             email: credentials.email
@@ -47,7 +58,11 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   session: {
-    strategy: "jwt"
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
     async jwt({ token, user }) {
