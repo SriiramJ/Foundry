@@ -5,10 +5,12 @@ import { getToken } from 'next-auth/jwt'
 export async function middleware(request: NextRequest) {
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
   
-  // Allow access to public routes
+  // Allow access to public routes and API routes
   if (request.nextUrl.pathname.startsWith('/login') || 
       request.nextUrl.pathname.startsWith('/register') ||
       request.nextUrl.pathname.startsWith('/api/auth') ||
+      request.nextUrl.pathname.startsWith('/api/register') ||
+      request.nextUrl.pathname.startsWith('/reset-password') ||
       request.nextUrl.pathname === '/') {
     return NextResponse.next()
   }
@@ -38,6 +40,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api/auth|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api/auth|api/register|_next/static|_next/image|favicon.ico).*)',
   ]
 }
