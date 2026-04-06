@@ -37,6 +37,7 @@ export default function KnowledgeBasePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedStage, setSelectedStage] = useState("All Stages");
+  const [selectedStatus, setSelectedStatus] = useState("All");
   const [showFilters, setShowFilters] = useState(false);
   const [problems, setProblems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,8 +69,11 @@ export default function KnowledgeBasePage() {
                          problem.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === "All Categories" || problem.category === selectedCategory;
     const matchesStage = selectedStage === "All Stages" || problem.stage === selectedStage;
+    const matchesStatus = selectedStatus === "All" || 
+                         (selectedStatus === "Solved" && problem.isSolved) || 
+                         (selectedStatus === "Open" && !problem.isSolved);
     
-    return matchesSearch && matchesCategory && matchesStage;
+    return matchesSearch && matchesCategory && matchesStage && matchesStatus;
   });
 
   if (loading) {
@@ -123,7 +127,7 @@ export default function KnowledgeBasePage() {
           </div>
 
           {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-border animate-slide-in">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-border animate-slide-in">
               <div>
                 <label className="text-sm font-medium mb-2 block font-mono">Category</label>
                 <select
@@ -146,6 +150,18 @@ export default function KnowledgeBasePage() {
                   {stages.map(stage => (
                     <option key={stage} value={stage}>{stage}</option>
                   ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block font-mono">Status</label>
+                <select
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                  className="w-full p-2 border border-border bg-input text-foreground font-mono transition-all hover:border-accent focus:border-accent"
+                >
+                  <option value="All">All Problems</option>
+                  <option value="Open">Open</option>
+                  <option value="Solved">Solved</option>
                 </select>
               </div>
             </div>
