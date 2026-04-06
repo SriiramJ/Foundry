@@ -13,10 +13,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         solutions: {
           include: {
             author: { select: { name: true, role: true, reputation: true } },
-            votes: true
+            votes: true,
+            _count: { select: { comments: true } }
           },
           orderBy: { createdAt: "desc" }
-        }
+        },
+        _count: { select: { comments: true } }
       }
     });
 
@@ -26,10 +28,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const problemWithVotes = {
       ...problem,
+      commentCount: problem._count.comments,
       solutions: problem.solutions.map(solution => ({
         ...solution,
         upvotes: solution.votes.filter(v => v.type === "UP").length,
-        downvotes: solution.votes.filter(v => v.type === "DOWN").length
+        downvotes: solution.votes.filter(v => v.type === "DOWN").length,
+        commentCount: solution._count.comments
       }))
     };
 

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, MessageSquare, ThumbsUp, ThumbsDown, User, Calendar, Star, X, Plus, CheckCircle } from "lucide-react";
+import { CommentSection } from "@/components/comment-section";
 
 export default function ProblemPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -204,6 +205,7 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
             </CardHeader>
             <CardContent>
               <p className="text-body leading-relaxed">{problem.description}</p>
+              <CommentSection problemId={problem.id} initialCount={problem.commentCount || 0} />
             </CardContent>
           </Card>
 
@@ -285,6 +287,7 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
                       </div>
                     </div>
                   )}
+                  <CommentSection solutionId={solution.id} initialCount={solution.commentCount || 0} />
                 </CardContent>
               </Card>
             ))}
