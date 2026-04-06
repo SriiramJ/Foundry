@@ -202,12 +202,12 @@ export default function MentorsPage() {
               </div>
               
               <div className="flex gap-2">
-                <Button className="flex-1 transform hover:scale-105 transition-all">
+                <Button
+                  className="flex-1 transform hover:scale-105 transition-all"
+                  onClick={() => router.push(`/messages?mentorId=${mentor.id}&mentorName=${encodeURIComponent(mentor.name)}`)}
+                >
                   <MessageCircle className="mr-2 h-4 w-4" />
                   Ask Question
-                </Button>
-                <Button variant="secondary" className="transform hover:scale-105 transition-all">
-                  View Profile
                 </Button>
               </div>
             </CardContent>
