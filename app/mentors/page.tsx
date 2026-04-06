@@ -209,6 +209,13 @@ export default function MentorsPage() {
                   <MessageCircle className="mr-2 h-4 w-4" />
                   Ask Question
                 </Button>
+                <Button
+                  variant="secondary"
+                  className="transform hover:scale-105 transition-all"
+                  onClick={() => router.push(`/mentors/${mentor.id}`)}
+                >
+                  View Profile
+                </Button>
               </div>
             </CardContent>
           </Card>
