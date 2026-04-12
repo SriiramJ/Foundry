@@ -1,7 +1,6 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import { useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 
@@ -11,14 +10,13 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { data: session, status } = useSession();
-  const router = useRouter();
 
+  // Force sign out if token refresh failed
   useEffect(() => {
-    if (status === "loading") return;
-    if (!session) {
-      router.push("/login");
+    if (session?.error === "RefreshTokenExpired" || session?.error === "UserNotFound") {
+      signOut({ callbackUrl: "/login?error=SessionExpired" });
     }
-  }, [session, status, router]);
+  }, [session]);
 
   if (status === "loading") {
     return (
@@ -29,10 +27,6 @@ export default function DashboardLayout({
         </div>
       </div>
     );
-  }
-
-  if (!session) {
-    return null;
   }
 
   return (

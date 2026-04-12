@@ -27,6 +27,7 @@ export async function GET() {
           take: 5
         },
         mentorApplication: true,
+        subscription: true,
         _count: {
           select: {
             problems: true,

@@ -151,11 +151,14 @@ model DirectMessage {
 }
 
 model Subscription {
-  id        String           @id @default(auto()) @map("_id") @db.ObjectId
-  plan      SubscriptionPlan
-  status    String
-  startDate DateTime         @default(now())
-  endDate   DateTime?
+  id                   String           @id @default(auto()) @map("_id") @db.ObjectId
+  plan                 SubscriptionPlan
+  status               String
+  stripeCustomerId     String?          @unique
+  stripeSubscriptionId String?          @unique
+  stripePriceId        String?
+  startDate            DateTime         @default(now())
+  endDate              DateTime?
   
   user      User             @relation(fields: [userId], references: [id])
   userId    String           @unique @db.ObjectId
@@ -214,4 +217,5 @@ enum VoteType {
 enum SubscriptionPlan {
   FREE
   PREMIUM
+  PRO
 }

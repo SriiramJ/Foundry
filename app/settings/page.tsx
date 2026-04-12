@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { User, Bell, Shield, CreditCard, LogOut, ArrowLeft } from "lucide-react";
+import { User, Bell, Shield, CreditCard, LogOut, ArrowLeft, ExternalLink } from "lucide-react";
 
 export default function SettingsPage() {
   const { data: session } = useSession();
@@ -17,6 +17,8 @@ export default function SettingsPage() {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isBillingLoading, setIsBillingLoading] = useState(false);
+  const [subscription, setSubscription] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -38,8 +40,33 @@ export default function SettingsPage() {
           weeklyDigest: false,
         }
       });
+      fetchSubscription();
     }
   }, [session]);
+
+  const fetchSubscription = async () => {
+    try {
+      const res = await fetch("/api/user");
+      if (res.ok) {
+        const data = await res.json();
+        setSubscription(data.subscription);
+      }
+    } catch {}
+  };
+
+  const handleManageBilling = async () => {
+    setIsBillingLoading(true);
+    try {
+      const res = await fetch("/api/stripe/portal", { method: "POST" });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+      else alert(data.error || "Failed to open billing portal");
+    } catch {
+      alert("Something went wrong.");
+    } finally {
+      setIsBillingLoading(false);
+    }
+  };
 
   const handleSave = async () => {
     setIsLoading(true);
@@ -268,9 +295,28 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between animate-slide-in">
               <div>
                 <p className="font-medium">Current Plan</p>
-                <p className="text-sm text-helper">Free Plan - Upgrade to unlock premium features</p>
+                <p className="text-sm text-helper">
+                  {subscription?.status === "active"
+                    ? `${subscription.plan} plan — active`
+                    : "Free Plan — Upgrade to unlock premium features"}
+                </p>
               </div>
-              <Button className="transform hover:scale-105 transition-all">Upgrade Now</Button>
+              {subscription?.status === "active" ? (
+                <Button
+                  onClick={handleManageBilling}
+                  disabled={isBillingLoading}
+                  variant="outline"
+                  className="transform hover:scale-105 transition-all"
+                >
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  {isBillingLoading ? "Loading..." : "Manage Billing"}
+                  <ExternalLink className="ml-2 h-3 w-3" />
+                </Button>
+              ) : (
+                <Button onClick={() => router.push("/upgrade")} className="transform hover:scale-105 transition-all">
+                  Upgrade Now
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -1,19 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { signIn, getSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Suspense } from "react";
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('error') === 'SessionExpired') {
+      setError('Your session has expired. Please sign in again.');
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,8 +39,11 @@ export default function LoginPage() {
         setError("Invalid credentials");
       } else {
         const session = await getSession();
+        const callbackUrl = searchParams.get('callbackUrl');
         if (session?.user?.role === 'ADMIN') {
           router.push("/admin");
+        } else if (callbackUrl && callbackUrl.startsWith('/') && !callbackUrl.startsWith('/login')) {
+          router.push(callbackUrl);
         } else {
           router.push("/dashboard");
         }
@@ -49,7 +60,8 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8 animate-slide-in">
           <Link href="/" className="text-h2 font-bold hover:text-accent transition-colors">
-Foundry          </Link>
+            Foundry
+          </Link>
           <p className="text-helper mt-2">Welcome back</p>
         </div>
         
@@ -128,5 +140,13 @@ Foundry          </Link>
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div></div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, X, Star, Zap, Crown, ArrowLeft } from "lucide-react";
+import { CheckCircle, X, Star, Zap, Crown, ArrowLeft, CreditCard, ExternalLink } from "lucide-react";
 
 const plans = [
   {
@@ -26,7 +26,6 @@ const plans = [
       { name: "Detailed analytics", included: false },
       { name: "1-on-1 mentor sessions", included: false }
     ],
-    cta: "Current Plan",
     popular: false
   },
   {
@@ -46,7 +45,6 @@ const plans = [
       { name: "Detailed analytics", included: true },
       { name: "1-on-1 mentor sessions", included: false }
     ],
-    cta: "Upgrade Now",
     popular: true
   },
   {
@@ -66,7 +64,6 @@ const plans = [
       { name: "Detailed analytics", included: true },
       { name: "1-on-1 mentor sessions", included: true }
     ],
-    cta: "Upgrade Now",
     popular: false
   }
 ];
@@ -89,43 +86,86 @@ const testimonials = [
 export default function UpgradePage() {
   const { data: session } = useSession();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState("premium");
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [isPortalLoading, setIsPortalLoading] = useState(false);
+  const [subscription, setSubscription] = useState<any>(null);
+
+  useEffect(() => {
+    if (session?.user) fetchSubscription();
+  }, [session]);
+
+  const fetchSubscription = async () => {
+    try {
+      const res = await fetch("/api/user");
+      if (res.ok) {
+        const data = await res.json();
+        setSubscription(data.subscription);
+      }
+    } catch {}
+  };
+
+  const currentPlan = subscription?.plan?.toLowerCase() || "free";
+  const isActive = subscription?.status === "active";
 
   const handleUpgrade = async (planId: string) => {
-    setIsLoading(true);
+    if (planId === "free") return;
+    setLoadingPlan(planId);
     try {
-      const response = await fetch('/api/upgrade', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ planId })
       });
-      
-      if (response.ok) {
-        alert(`Successfully upgraded to ${planId} plan!`);
-        window.location.reload();
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
       } else {
-        alert('Upgrade failed. Please try again.');
+        alert(data.error || "Failed to start checkout");
       }
-    } catch (error) {
-      alert('Error processing upgrade');
+    } catch {
+      alert("Something went wrong. Please try again.");
     } finally {
-      setIsLoading(false);
+      setLoadingPlan(null);
     }
+  };
+
+  const handleManageBilling = async () => {
+    setIsPortalLoading(true);
+    try {
+      const res = await fetch("/api/stripe/portal", { method: "POST" });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || "Failed to open billing portal");
+      }
+    } catch {
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setIsPortalLoading(false);
+    }
+  };
+
+  const getPlanCta = (planId: string) => {
+    if (planId === "free") return "Current Plan";
+    if (currentPlan === planId && isActive) return "Current Plan";
+    if (currentPlan !== "free" && isActive) return "Change Plan";
+    return "Upgrade Now";
+  };
+
+  const isPlanDisabled = (planId: string) => {
+    if (planId === "free") return true;
+    if (currentPlan === planId && isActive) return true;
+    return false;
   };
 
   return (
     <div className="p-6 animate-fade-in">
       <div className="max-w-6xl mx-auto">
-        <Button 
-          variant="secondary" 
-          onClick={() => router.back()}
-          className="mb-6 transform hover:scale-105 transition-all"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
+        <Button variant="secondary" onClick={() => router.back()} className="mb-6 transform hover:scale-105 transition-all">
+          <ArrowLeft className="mr-2 h-4 w-4" />Back
         </Button>
-        
+
         {/* Header */}
         <div className="text-center mb-12 animate-slide-in">
           <h1 className="text-h1 mb-4">Unlock Your Full Potential</h1>
@@ -134,28 +174,59 @@ export default function UpgradePage() {
           </p>
         </div>
 
+        {/* Active Subscription Banner */}
+        {currentPlan !== "free" && isActive && (
+          <Card className="mb-8 border-success/30 bg-success/5 animate-fade-in">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-5 w-5 text-success" />
+                  <div>
+                    <p className="font-medium">You're on the <span className="capitalize">{currentPlan}</span> plan</p>
+                    <p className="text-sm text-helper">Manage your subscription, update payment method, or cancel anytime.</p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={handleManageBilling}
+                  disabled={isPortalLoading}
+                  className="transform hover:scale-105 transition-all"
+                >
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  {isPortalLoading ? "Loading..." : "Manage Billing"}
+                  <ExternalLink className="ml-2 h-3 w-3" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Pricing Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16 stagger-children">
           {plans.map((plan, index) => (
-            <Card 
-              key={plan.id} 
-              className={`relative card-hover animate-scale-in ${plan.popular ? 'border-accent shadow-lg scale-105' : ''}`}
-              style={{animationDelay: `${index * 0.1}s`}}
+            <Card
+              key={plan.id}
+              className={`relative card-hover animate-scale-in ${plan.popular ? "border-accent shadow-lg scale-105" : ""} ${currentPlan === plan.id && isActive ? "border-success/50" : ""}`}
+              style={{ animationDelay: `${index * 0.1}s` }}
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                   <Badge variant="premium" className="px-4 py-1 animate-pulse">
-                    <Star className="w-3 h-3 mr-1" />
-                    Most Popular
+                    <Star className="w-3 h-3 mr-1" />Most Popular
                   </Badge>
                 </div>
               )}
-              
+              {currentPlan === plan.id && isActive && (
+                <div className="absolute -top-3 right-4">
+                  <Badge className="bg-success text-white px-3 py-1">Active</Badge>
+                </div>
+              )}
+
               <CardHeader className="text-center pb-4">
                 <div className="mb-4">
-                  {plan.id === "free" && <Zap className="w-8 h-8 text-accent mx-auto transition-transform hover:scale-110" />}
-                  {plan.id === "premium" && <Star className="w-8 h-8 text-warning mx-auto transition-transform hover:scale-110" />}
-                  {plan.id === "pro" && <Crown className="w-8 h-8 text-success mx-auto transition-transform hover:scale-110" />}
+                  {plan.id === "free" && <Zap className="w-8 h-8 text-accent mx-auto" />}
+                  {plan.id === "premium" && <Star className="w-8 h-8 text-warning mx-auto" />}
+                  {plan.id === "pro" && <Crown className="w-8 h-8 text-success mx-auto" />}
                 </div>
                 <CardTitle className="text-2xl">{plan.name}</CardTitle>
                 <CardDescription>{plan.description}</CardDescription>
@@ -164,36 +235,37 @@ export default function UpgradePage() {
                   <span className="text-helper ml-1">/{plan.period}</span>
                 </div>
               </CardHeader>
-              
+
               <CardContent>
                 <ul className="space-y-3 mb-6">
-                  {plan.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-center animate-fade-in" style={{animationDelay: `${featureIndex * 0.05}s`}}>
+                  {plan.features.map((feature, i) => (
+                    <li key={i} className="flex items-center">
                       {feature.included ? (
                         <CheckCircle className="h-5 w-5 text-success mr-3 flex-shrink-0" />
                       ) : (
                         <X className="h-5 w-5 text-muted-foreground mr-3 flex-shrink-0" />
                       )}
-                      <span className={feature.included ? "" : "text-muted-foreground"}>
-                        {feature.name}
-                      </span>
+                      <span className={feature.included ? "" : "text-muted-foreground"}>{feature.name}</span>
                     </li>
                   ))}
                 </ul>
-                
+
                 <Button
-                  className={`w-full transform hover:scale-105 transition-all ${plan.popular ? 'animate-pulse' : ''}`}
+                  className="w-full transform hover:scale-105 transition-all"
                   variant={plan.popular ? "default" : "secondary"}
                   onClick={() => handleUpgrade(plan.id)}
-                  disabled={isLoading || (plan.id === "free" && false)} // Removed isPremium check
+                  disabled={isPlanDisabled(plan.id) || loadingPlan !== null}
                 >
-                  {isLoading ? (
+                  {loadingPlan === plan.id ? (
                     <span className="flex items-center">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Processing...
+                      Redirecting to Stripe...
                     </span>
                   ) : (
-                    plan.cta
+                    <>
+                      {plan.id !== "free" && !isPlanDisabled(plan.id) && <CreditCard className="mr-2 h-4 w-4" />}
+                      {getPlanCta(plan.id)}
+                    </>
                   )}
                 </Button>
               </CardContent>
@@ -201,66 +273,29 @@ export default function UpgradePage() {
           ))}
         </div>
 
-        {/* Features Comparison */}
-        <Card className="mb-16 card-hover animate-fade-in" style={{animationDelay: '0.4s'}}>
-          <CardHeader>
-            <CardTitle className="text-center">Why Upgrade?</CardTitle>
-            <CardDescription className="text-center">
-              See what you get with premium access
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 stagger-children">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-4 transition-transform hover:scale-110">
-                  <Zap className="h-6 w-6 text-accent" />
-                </div>
-                <h3 className="font-medium mb-2">Priority Support</h3>
-                <p className="text-sm text-helper">
-                  Get your problems seen first and receive faster responses from mentors.
-                </p>
-              </div>
-              
-              <div className="text-center">
-                <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center mx-auto mb-4 transition-transform hover:scale-110">
-                  <CheckCircle className="h-6 w-6 text-success" />
-                </div>
-                <h3 className="font-medium mb-2">Premium Content</h3>
-                <p className="text-sm text-helper">
-                  Access detailed implementation guides and expert insights.
-                </p>
-              </div>
-              
-              <div className="text-center">
-                <div className="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center mx-auto mb-4 transition-transform hover:scale-110">
-                  <Star className="h-6 w-6 text-warning" />
-                </div>
-                <h3 className="font-medium mb-2">Advanced Analytics</h3>
-                <p className="text-sm text-helper">
-                  Track your progress and get insights into your entrepreneurial journey.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Secure Payment Note */}
+        <div className="text-center mb-12 animate-fade-in">
+          <p className="text-sm text-helper flex items-center justify-center gap-2">
+            <CreditCard className="h-4 w-4" />
+            Payments are securely processed by Stripe. Cancel anytime from your billing portal.
+          </p>
+        </div>
 
         {/* Testimonials */}
-        <div className="text-center mb-16 animate-fade-in" style={{animationDelay: '0.5s'}}>
+        <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-h2 mb-8">What Our Premium Users Say</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 stagger-children">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="card-hover">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {testimonials.map((t, i) => (
+              <Card key={i} className="card-hover">
                 <CardContent className="pt-6">
                   <div className="flex items-center mb-4">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 text-warning fill-current animate-fade-in" style={{animationDelay: `${i * 0.1}s`}} />
+                    {[...Array(t.rating)].map((_, j) => (
+                      <Star key={j} className="h-4 w-4 text-warning fill-current" />
                     ))}
                   </div>
-                  <p className="text-helper mb-4">"{testimonial.content}"</p>
-                  <div>
-                    <p className="font-medium">{testimonial.name}</p>
-                    <p className="text-sm text-helper">{testimonial.role}</p>
-                  </div>
+                  <p className="text-helper mb-4">"{t.content}"</p>
+                  <p className="font-medium">{t.name}</p>
+                  <p className="text-sm text-helper">{t.role}</p>
                 </CardContent>
               </Card>
             ))}
@@ -268,30 +303,26 @@ export default function UpgradePage() {
         </div>
 
         {/* FAQ */}
-        <Card className="card-hover animate-fade-in" style={{animationDelay: '0.6s'}}>
+        <Card className="card-hover animate-fade-in">
           <CardHeader>
             <CardTitle className="text-center">Frequently Asked Questions</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div className="animate-slide-in">
-                <h3 className="font-medium mb-2">Can I cancel anytime?</h3>
-                <p className="text-helper">
-                  Yes, you can cancel your subscription at any time. You'll continue to have access until the end of your billing period.
-                </p>
-              </div>
-              <div className="animate-slide-in" style={{animationDelay: '0.1s'}}>
-                <h3 className="font-medium mb-2">What payment methods do you accept?</h3>
-                <p className="text-helper">
-                  We accept all major credit cards and PayPal. All payments are processed securely through Stripe.
-                </p>
-              </div>
-              <div className="animate-slide-in" style={{animationDelay: '0.2s'}}>
-                <h3 className="font-medium mb-2">Is there a free trial?</h3>
-                <p className="text-helper">
-                  We offer a generous free tier that lets you explore the platform. You can upgrade anytime to access premium features.
-                </p>
-              </div>
+          <CardContent className="space-y-6">
+            <div>
+              <h3 className="font-medium mb-2">Can I cancel anytime?</h3>
+              <p className="text-helper">Yes, cancel anytime from the billing portal. You'll keep access until the end of your billing period.</p>
+            </div>
+            <div>
+              <h3 className="font-medium mb-2">What payment methods do you accept?</h3>
+              <p className="text-helper">All major credit and debit cards via Stripe. Your payment info is never stored on our servers.</p>
+            </div>
+            <div>
+              <h3 className="font-medium mb-2">Can I switch plans?</h3>
+              <p className="text-helper">Yes, upgrade or downgrade anytime from the billing portal. Changes take effect immediately.</p>
+            </div>
+            <div>
+              <h3 className="font-medium mb-2">Is there a free trial?</h3>
+              <p className="text-helper">We offer a generous free tier. Upgrade anytime to unlock premium features.</p>
             </div>
           </CardContent>
         </Card>
