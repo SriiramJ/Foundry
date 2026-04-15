@@ -24,6 +24,7 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMarkingSolved, setIsMarkingSolved] = useState(false);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [votes, setVotes] = useState<{[key: string]: 'up' | 'down' | null}>({});
 
   useEffect(() => {
@@ -80,6 +81,18 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
       }
     } catch (error) {
       console.error('Failed to vote:', error);
+    }
+  };
+
+  const handleVerifySolution = async (solutionId: string) => {
+    setVerifyingId(solutionId);
+    try {
+      const response = await fetch(`/api/solutions/${solutionId}`, { method: 'PATCH' });
+      if (response.ok) fetchProblem();
+    } catch (error) {
+      console.error('Failed to verify solution:', error);
+    } finally {
+      setVerifyingId(null);
     }
   };
 
@@ -242,6 +255,18 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
+                      {isOwner && (
+                        <Button
+                          variant={solution.isVerified ? "default" : "secondary"}
+                          size="sm"
+                          onClick={() => handleVerifySolution(solution.id)}
+                          disabled={verifyingId === solution.id}
+                          className="transform hover:scale-105 transition-all"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          {solution.isVerified ? "Verified" : "Verify"}
+                        </Button>
+                      )}
                       <Button
                         variant={votes[solution.id] === 'up' ? "default" : "secondary"}
                         size="sm"

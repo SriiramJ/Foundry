@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendNewMessageEmail } from "@/lib/email";
 
 // GET /api/messages - fetch all conversations for current user
 export async function GET() {
@@ -60,10 +61,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "receiverId and content are required" }, { status: 400 });
     }
 
-    const receiver = await prisma.user.findUnique({ where: { id: receiverId } });
+    const receiver = await prisma.user.findUnique({ where: { id: receiverId }, select: { id: true, name: true, email: true } });
     if (!receiver) {
       return NextResponse.json({ error: "Recipient not found" }, { status: 404 });
     }
+
+    const sender = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { name: true }
+    });
 
     const message = await prisma.directMessage.create({
       data: {
@@ -76,6 +82,10 @@ export async function POST(request: NextRequest) {
         receiver: { select: { id: true, name: true, role: true } }
       }
     });
+
+    // Notify receiver — fire and forget
+    sendNewMessageEmail(receiver.email!, receiver.name || 'there', sender?.name || 'Someone')
+      .catch(err => console.error('New message email error:', err));
 
     return NextResponse.json(message);
   } catch (error) {

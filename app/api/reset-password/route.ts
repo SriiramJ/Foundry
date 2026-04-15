@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { sendPasswordChangedEmail } from "@/lib/email";
 
 const resetSchema = z.object({
   token: z.string(),
@@ -41,6 +42,8 @@ export async function POST(request: NextRequest) {
         data: { used: true }
       })
     ]);
+
+    sendPasswordChangedEmail(resetToken.user.email!, resetToken.user.name || 'there').catch(err => console.error('Password changed email error:', err));
 
     return NextResponse.json({ message: "Password updated successfully" });
   } catch (error) {
