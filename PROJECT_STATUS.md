@@ -196,8 +196,8 @@ Foundry is a community platform for entrepreneurs to post startup problems, rece
 | Mentor profile view ("View Profile" button) | Button exists, no page | done
 | Comment system | Model exists in DB, no UI | done
 | Problem solved marking | Status in DB, no UI toggle | done
-| Email notifications | SMTP configured, not triggered on events |
-| Weekly digest emails | Toggle in settings, not implemented |
+| Email notifications | SMTP configured, not triggered on events | done
+| Weekly digest emails | Toggle in settings, not implemented | done
 | Advanced analytics for premium users | Mentioned in pricing, not built |
 | 1-on-1 mentor sessions | Listed in Pro plan, not built |
 | Premium content locking | Partial UI (lock icon commented out) |

@@ -30,6 +30,7 @@ const PROTECTED_ROUTES = [
   '/settings',
   '/upgrade',
   '/apply-mentor',
+  '/analytics',
 ]
 
 export async function proxy(request: NextRequest) {

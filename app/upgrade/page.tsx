@@ -30,7 +30,7 @@ const plans = [
       { name: "Priority problem posting", included: false },
       { name: "Premium mentor responses", included: false },
       { name: "Advanced search filters", included: false },
-      { name: "Detailed analytics", included: false },
+      { name: "Advanced analytics", included: false },
       { name: "1-on-1 mentor sessions", included: false },
     ],
     popular: false,
@@ -38,7 +38,7 @@ const plans = [
   {
     id: "premium",
     name: "Premium",
-    price: "₹29",
+    price: "₹399",
     period: "per month",
     description: "For serious entrepreneurs",
     features: [
@@ -49,7 +49,7 @@ const plans = [
       { name: "Priority problem posting", included: true },
       { name: "Premium mentor responses", included: true },
       { name: "Advanced search filters", included: true },
-      { name: "Detailed analytics", included: true },
+      { name: "Advanced analytics", included: false },
       { name: "1-on-1 mentor sessions", included: false },
     ],
     popular: true,
@@ -57,7 +57,7 @@ const plans = [
   {
     id: "pro",
     name: "Pro",
-    price: "₹99",
+    price: "₹599",
     period: "per month",
     description: "For scaling businesses",
     features: [
@@ -68,7 +68,7 @@ const plans = [
       { name: "Priority problem posting", included: true },
       { name: "Premium mentor responses", included: true },
       { name: "Advanced search filters", included: true },
-      { name: "Detailed analytics", included: true },
+      { name: "Advanced analytics", included: true },
       { name: "1-on-1 mentor sessions", included: true },
     ],
     popular: false,

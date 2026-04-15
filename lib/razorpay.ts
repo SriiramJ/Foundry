@@ -8,13 +8,13 @@ export const razorpay = new Razorpay({
 export const PLANS = {
   premium: {
     name: "Premium",
-    amount: 2900,      // in paise (₹29 * 100) — change to your currency
+    amount: 39900,     // in paise (₹399 * 100)
     currency: "INR",
     period: "monthly",
   },
   pro: {
     name: "Pro",
-    amount: 9900,      // in paise (₹99 * 100)
+    amount: 59900,     // in paise (₹599 * 100)
     currency: "INR",
     period: "monthly",
   },

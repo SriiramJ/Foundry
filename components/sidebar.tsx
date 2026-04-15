@@ -16,7 +16,8 @@ import {
   User, 
   Settings,
   Shield,
-  MessageCircle
+  MessageCircle,
+  BarChart2
 } from "lucide-react"
 
 const navigation = [
@@ -25,6 +26,7 @@ const navigation = [
   { name: "Knowledge Base", href: "/knowledge-base", icon: BookOpen },
   { name: "Mentors", href: "/mentors", icon: Users },
   { name: "Messages", href: "/messages", icon: MessageCircle },
+  { name: "Analytics", href: "/analytics", icon: BarChart2 },
   { name: "Profile", href: "/profile", icon: User },
   { name: "Settings", href: "/settings", icon: Settings },
 ]

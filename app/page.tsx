@@ -137,7 +137,7 @@ export default function Home() {
                   <Badge variant="premium" className="animate-pulse">Popular</Badge>
                 </div>
                 <CardDescription>For serious entrepreneurs</CardDescription>
-                <div className="text-h2 mt-4">$29/mo</div>
+                <div className="text-h2 mt-4">₹399/mo</div>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3 text-left">
