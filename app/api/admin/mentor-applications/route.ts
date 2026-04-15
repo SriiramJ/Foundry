@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendMentorApplicationStatusEmail } from "@/lib/email";
 
 export async function GET() {
   try {
@@ -70,6 +71,15 @@ export async function PUT(request: NextRequest) {
         where: { id: application.userId },
         data: { role: "MENTOR" }
       });
+    }
+
+    if (status !== "PENDING") {
+      sendMentorApplicationStatusEmail(
+        application.user.email!,
+        application.user.name || 'there',
+        status as 'APPROVED' | 'REJECTED' | 'NEEDS_INFO',
+        reviewNotes
+      ).catch(err => console.error('Mentor status email error:', err));
     }
 
     return NextResponse.json({ 

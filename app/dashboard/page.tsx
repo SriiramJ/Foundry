@@ -217,10 +217,11 @@ export default function DashboardPage() {
             <CardContent>
               <div className="space-y-4">
                 {recentProblems.map((problem: any, index: number) => (
-                  <div key={problem.id} className="border border-border p-4 hover:bg-muted/50 transition-colors animate-slide-in" style={{animationDelay: `${index * 0.1}s`}}>
+                  <Link key={problem.id} href={`/problems/${problem.id}`}>
+                  <div className="border border-border p-4 hover:bg-muted/50 transition-colors animate-slide-in cursor-pointer" style={{animationDelay: `${index * 0.1}s`}}>
                     <div className="flex items-start justify-between">
                       <div>
-                        <h3 className="font-medium font-sans">{problem.title}</h3>
+                        <h3 className="font-medium font-sans hover:text-accent transition-colors">{problem.title}</h3>
                         <p className="text-sm text-helper mt-1 font-mono">Posted in {problem.category} • {new Date(problem.createdAt).toLocaleDateString()}</p>
                         <div className="flex items-center gap-2 mt-2">
                           <span className="tag-system">{problem.stage}</span>
@@ -232,6 +233,7 @@ export default function DashboardPage() {
                       </Badge>
                     </div>
                   </div>
+                  </Link>
                 ))}
                 {recentProblems.length === 0 && (
                   <p className="text-helper text-center font-mono">No problems posted yet</p>

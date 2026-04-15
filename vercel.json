@@ -8,6 +8,12 @@
       "maxDuration": 30
     }
   },
+  "crons": [
+    {
+      "path": "/api/weekly-digest",
+      "schedule": "0 9 * * 1"
+    }
+  ],
   "env": {
     "NEXTAUTH_URL": "https://your-app.vercel.app"
   }

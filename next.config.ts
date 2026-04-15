@@ -7,6 +7,16 @@ const nextConfig: NextConfig = {
   },
   env: {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+  },
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'ngrok-skip-browser-warning', value: 'true' },
+        ],
+      },
+    ]
   }
 };
 

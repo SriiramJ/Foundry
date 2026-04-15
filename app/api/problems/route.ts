@@ -54,6 +54,7 @@ export async function GET() {
         category: true,
         stage: true,
         tags: true,
+        isSolved: true,
         createdAt: true,
         createdBy: { select: { name: true, role: true } },
         _count: { 

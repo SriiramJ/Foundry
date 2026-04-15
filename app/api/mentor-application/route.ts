@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendNewMentorApplicationAdminEmail } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -48,6 +49,8 @@ export async function POST(request: NextRequest) {
         userId: user.id
       }
     });
+
+    sendNewMentorApplicationAdminEmail(fullName, user.email!, expertise).catch(err => console.error('Admin mentor application email error:', err));
 
     return NextResponse.json({ message: "Application submitted successfully", application });
   } catch (error) {

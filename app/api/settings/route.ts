@@ -27,7 +27,15 @@ export async function PUT(request: NextRequest) {
     const updateData: any = {};
     if (validatedData.name) updateData.name = validatedData.name;
     if (validatedData.email) updateData.email = validatedData.email;
-    // Note: notifications stored in client state only for now
+    if (validatedData.notifications) {
+      updateData.notifyNewSolutions = validatedData.notifications.newSolutions;
+      updateData.notifyMentorResponses = validatedData.notifications.mentorResponses;
+      updateData.notifyWeeklyDigest = validatedData.notifications.weeklyDigest;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ message: "Nothing to update" });
+    }
 
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
@@ -41,6 +49,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(updatedUser);
   } catch (error) {
+    console.error("Settings update error:", error);
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: "Invalid input data", details: error.errors }, { status: 400 });
     }

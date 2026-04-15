@@ -83,8 +83,8 @@ export default function PostProblemPage() {
 
   const canProceed = () => {
     switch (currentStep) {
-      case 1: return formData.title.trim().length > 0;
-      case 2: return formData.description.trim().length > 0;
+      case 1: return formData.title.trim().length >= 10;
+      case 2: return formData.description.trim().length >= 50;
       case 3: return formData.category.length > 0;
       case 4: return formData.stage.length > 0;
       default: return false;
@@ -157,7 +157,7 @@ export default function PostProblemPage() {
                 className="text-lg transition-all focus:scale-105"
               />
               <p className="text-helper text-sm animate-fade-in" style={{animationDelay: '0.2s'}}>
-                Be specific and clear. Good titles get better responses.
+                Be specific and clear. Good titles get better responses. ({formData.title.trim().length}/10 min characters)
               </p>
             </div>
           )}
@@ -176,7 +176,7 @@ export default function PostProblemPage() {
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               />
               <p className="text-helper text-sm animate-fade-in" style={{animationDelay: '0.2s'}}>
-                The more context you provide, the better solutions you'll receive.
+                The more context you provide, the better solutions you'll receive. ({formData.description.trim().length}/50 min characters)
               </p>
             </div>
           )}

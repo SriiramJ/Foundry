@@ -27,6 +27,7 @@ export async function GET() {
           take: 5
         },
         mentorApplication: true,
+        subscription: true,
         _count: {
           select: {
             problems: true,
@@ -48,6 +49,8 @@ export async function GET() {
 
     return NextResponse.json({
       ...user,
+      twoFactorEnabled: user.twoFactorEnabled,
+      twoFactorSecret: undefined, // never expose secret
       upvotesReceived,
       verifiedSolutions,
       mentorApplication: user.mentorApplication
