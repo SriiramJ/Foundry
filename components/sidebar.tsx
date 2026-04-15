@@ -55,7 +55,7 @@ export function Sidebar() {
   return (
     <div className="flex h-full w-64 flex-col border-r border-border bg-background animate-slide-in">
       <div className="flex h-16 items-center justify-between px-6 border-b border-border">
-        <Link href="/dashboard" className="text-h3 font-bold text-accent hover:text-accent/80 transition-colors font-sans tracking-tight">
+        <Link href="/" className="text-h3 font-bold text-accent hover:text-accent/80 transition-colors font-sans tracking-tight">
           Foundry
         </Link>
         <Button

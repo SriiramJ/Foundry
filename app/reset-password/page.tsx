@@ -1,13 +1,56 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
 
-function ResetPasswordForm() {
+function ForgotPasswordForm() {
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (res.ok) setMessage(data.message);
+      else setError(data.error || "Failed to send reset email");
+    } catch {
+      setError("Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Card className="w-full max-w-md problem-card">
+      <CardHeader><CardTitle className="text-center">Forgot Password</CardTitle></CardHeader>
+      <CardContent>
+        {error && <div className="p-3 text-sm text-red-600 bg-red-50 rounded mb-4">{error}</div>}
+        {message && <div className="p-3 text-sm text-green-600 bg-green-50 rounded mb-4">{message}</div>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input type="email" placeholder="Your email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <Button type="submit" disabled={isLoading} className="w-full btn-primary">
+            {isLoading ? "Sending..." : "Send Reset Link"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ResetPasswordForm({ token }: { token: string }) {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -16,14 +59,6 @@ function ResetPasswordForm() {
   const [error, setError] = useState("");
   
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token");
-
-  useEffect(() => {
-    if (!token) {
-      setError("Invalid reset link");
-    }
-  }, [token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,8 +155,14 @@ export default function ResetPasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Suspense fallback={<div>Loading...</div>}>
-        <ResetPasswordForm />
+        <ResetPasswordPageContent />
       </Suspense>
     </div>
   );
+}
+
+function ResetPasswordPageContent() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
+  return token ? <ResetPasswordForm token={token} /> : <ForgotPasswordForm />;
 }

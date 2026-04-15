@@ -190,12 +190,12 @@ Foundry is a community platform for entrepreneurs to post startup problems, rece
 
 | Feature | Status |
 |---|---|
-| Payment gateway (Stripe) | UI exists, no real payment processing |
-| Two-Factor Authentication (2FA) | UI placeholder only |
-| Mentor direct messaging ("Ask Question" button) | Button exists, no functionality |
-| Mentor profile view ("View Profile" button) | Button exists, no page |
-| Comment system | Model exists in DB, no UI |
-| Problem solved marking | Status in DB, no UI toggle |
+| Payment gateway (Stripe) | UI exists, no real payment processing | done
+| Two-Factor Authentication (2FA) | UI placeholder only | done
+| Mentor direct messaging ("Ask Question" button) | Button exists, no functionality | done
+| Mentor profile view ("View Profile" button) | Button exists, no page | done
+| Comment system | Model exists in DB, no UI | done
+| Problem solved marking | Status in DB, no UI toggle | done
 | Email notifications | SMTP configured, not triggered on events |
 | Weekly digest emails | Toggle in settings, not implemented |
 | Advanced analytics for premium users | Mentioned in pricing, not built |

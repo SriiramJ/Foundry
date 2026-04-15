@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { User, Bell, Shield, CreditCard, LogOut, ArrowLeft, ExternalLink } from "lucide-react";
+import { User, Bell, Shield, CreditCard, LogOut, ArrowLeft, CheckCircle, Smartphone, Copy, Eye, EyeOff } from "lucide-react";
 
 export default function SettingsPage() {
   const { data: session } = useSession();
@@ -17,8 +17,17 @@ export default function SettingsPage() {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isBillingLoading, setIsBillingLoading] = useState(false);
   const [subscription, setSubscription] = useState<any>(null);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [show2FASetup, setShow2FASetup] = useState(false);
+  const [show2FADisable, setShow2FADisable] = useState(false);
+  const [qrCode, setQrCode] = useState("");
+  const [twoFASecret, setTwoFASecret] = useState("");
+  const [twoFAOtp, setTwoFAOtp] = useState("");
+  const [twoFALoading, setTwoFALoading] = useState(false);
+  const [twoFAMessage, setTwoFAMessage] = useState("");
+  const [twoFAError, setTwoFAError] = useState("");
+  const [showSecret, setShowSecret] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -31,18 +40,109 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (session?.user) {
-      setFormData({
-        name: session.user.name || "",
-        email: session.user.email || "",
-        notifications: {
-          newSolutions: true,
-          mentorResponses: true,
-          weeklyDigest: false,
-        }
-      });
       fetchSubscription();
+      fetch2FAStatus();
     }
   }, [session]);
+
+  const fetch2FAStatus = async () => {
+    try {
+      const res = await fetch("/api/user");
+      if (res.ok) {
+        const data = await res.json();
+        setTwoFactorEnabled(data.twoFactorEnabled || false);
+        setFormData({
+          name: data.name || "",
+          email: data.email || "",
+          notifications: {
+            newSolutions: data.notifyNewSolutions ?? true,
+            mentorResponses: data.notifyMentorResponses ?? true,
+            weeklyDigest: data.notifyWeeklyDigest ?? false,
+          },
+        });
+      }
+    } catch {}
+  };
+
+  const handleSetup2FA = async () => {
+    setTwoFALoading(true);
+    setTwoFAError("");
+    try {
+      const res = await fetch("/api/2fa/setup", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        setQrCode(data.qrCode);
+        setTwoFASecret(data.secret);
+        setShow2FASetup(true);
+        setTwoFAOtp("");
+        setTwoFAMessage("");
+      } else {
+        setTwoFAError(data.error || "Failed to setup 2FA");
+      }
+    } catch {
+      setTwoFAError("Something went wrong");
+    } finally {
+      setTwoFALoading(false);
+    }
+  };
+
+  const handleEnable2FA = async () => {
+    if (!twoFAOtp || twoFAOtp.length !== 6) {
+      setTwoFAError("Please enter the 6-digit code");
+      return;
+    }
+    setTwoFALoading(true);
+    setTwoFAError("");
+    try {
+      const res = await fetch("/api/2fa/enable", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ otp: twoFAOtp })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTwoFactorEnabled(true);
+        setShow2FASetup(false);
+        setTwoFAMessage("2FA enabled successfully!");
+        setTwoFAOtp("");
+      } else {
+        setTwoFAError(data.error || "Invalid code");
+      }
+    } catch {
+      setTwoFAError("Something went wrong");
+    } finally {
+      setTwoFALoading(false);
+    }
+  };
+
+  const handleDisable2FA = async () => {
+    if (!twoFAOtp || twoFAOtp.length !== 6) {
+      setTwoFAError("Please enter the 6-digit code to confirm");
+      return;
+    }
+    setTwoFALoading(true);
+    setTwoFAError("");
+    try {
+      const res = await fetch("/api/2fa/disable", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ otp: twoFAOtp })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTwoFactorEnabled(false);
+        setShow2FADisable(false);
+        setTwoFAMessage("2FA disabled successfully.");
+        setTwoFAOtp("");
+      } else {
+        setTwoFAError(data.error || "Invalid code");
+      }
+    } catch {
+      setTwoFAError("Something went wrong");
+    } finally {
+      setTwoFALoading(false);
+    }
+  };
 
   const fetchSubscription = async () => {
     try {
@@ -55,17 +155,7 @@ export default function SettingsPage() {
   };
 
   const handleManageBilling = async () => {
-    setIsBillingLoading(true);
-    try {
-      const res = await fetch("/api/stripe/portal", { method: "POST" });
-      const data = await res.json();
-      if (data.url) window.location.href = data.url;
-      else alert(data.error || "Failed to open billing portal");
-    } catch {
-      alert("Something went wrong.");
-    } finally {
-      setIsBillingLoading(false);
-    }
+    router.push("/upgrade");
   };
 
   const handleSave = async () => {
@@ -118,16 +208,6 @@ export default function SettingsPage() {
       setPasswordMessage("Error sending reset email");
     } finally {
       setPasswordLoading(false);
-    }
-  };
-
-  const handleEnable2FA = async () => {
-    try {
-      // Placeholder for 2FA setup functionality
-      alert("2FA setup functionality coming soon!");
-    } catch (error) {
-      console.error('2FA setup error:', error);
-      alert("Failed to enable 2FA");
     }
   };
 
@@ -273,10 +353,135 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between animate-slide-in" style={{animationDelay: '0.1s'}}>
               <div>
                 <p className="font-medium">Two-Factor Authentication</p>
-                <p className="text-sm text-helper">Add an extra layer of security to your account</p>
+                <p className="text-sm text-helper">
+                  {twoFactorEnabled
+                    ? "2FA is enabled. Your account is protected."
+                    : "Add an extra layer of security to your account"}
+                </p>
               </div>
-              <Button variant="secondary" onClick={handleEnable2FA} className="transform hover:scale-105 transition-all">Enable 2FA</Button>
+              <div className="flex items-center gap-2">
+                {twoFactorEnabled && (
+                  <CheckCircle className="h-4 w-4 text-success" />
+                )}
+                <Button
+                  variant={twoFactorEnabled ? "outline" : "secondary"}
+                  onClick={() => {
+                    setTwoFAError("");
+                    setTwoFAOtp("");
+                    if (twoFactorEnabled) {
+                      setShow2FADisable(true);
+                      setShow2FASetup(false);
+                    } else {
+                      handleSetup2FA();
+                    }
+                  }}
+                  disabled={twoFALoading}
+                  className="transform hover:scale-105 transition-all"
+                >
+                  {twoFALoading ? (
+                    <span className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
+                      Loading...
+                    </span>
+                  ) : twoFactorEnabled ? "Disable 2FA" : "Enable 2FA"}
+                </Button>
+              </div>
             </div>
+
+            {/* 2FA Success Message */}
+            {twoFAMessage && !show2FASetup && !show2FADisable && (
+              <div className="p-3 text-sm text-green-600 bg-green-50 rounded-lg animate-fade-in">
+                {twoFAMessage}
+              </div>
+            )}
+
+            {/* 2FA Setup Panel */}
+            {show2FASetup && (
+              <div className="border border-border rounded-lg p-4 space-y-4 animate-fade-in">
+                <div className="flex items-center gap-2 mb-2">
+                  <Smartphone className="h-5 w-5 text-accent" />
+                  <p className="font-medium">Set up Authenticator App</p>
+                </div>
+
+                <div className="space-y-3 text-sm text-helper">
+                  <p>1. Install an authenticator app (Google Authenticator, Authy, or Microsoft Authenticator)</p>
+                  <p>2. Scan the QR code below or enter the secret key manually</p>
+                  <p>3. Enter the 6-digit code from the app to confirm</p>
+                </div>
+
+                {/* QR Code */}
+                {qrCode && (
+                  <div className="flex justify-center">
+                    <img src={qrCode} alt="2FA QR Code" className="w-48 h-48 border border-border rounded-lg" />
+                  </div>
+                )}
+
+                {/* Manual Secret */}
+                <div>
+                  <p className="text-xs text-helper mb-1">Or enter this key manually:</p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 p-2 bg-muted rounded text-xs font-mono break-all">
+                      {showSecret ? twoFASecret : "•".repeat(twoFASecret.length)}
+                    </code>
+                    <button onClick={() => setShowSecret(!showSecret)} className="p-1 text-helper hover:text-foreground">
+                      {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                    <button
+                      onClick={() => { navigator.clipboard.writeText(twoFASecret); }}
+                      className="p-1 text-helper hover:text-accent"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* OTP Input */}
+                {twoFAError && (
+                  <p className="text-sm text-red-500">{twoFAError}</p>
+                )}
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Enter 6-digit code"
+                    value={twoFAOtp}
+                    onChange={(e) => { setTwoFAOtp(e.target.value.replace(/\D/g, "").slice(0, 6)); setTwoFAError(""); }}
+                    maxLength={6}
+                    className="flex-1 font-mono text-center text-lg tracking-widest"
+                  />
+                  <Button onClick={handleEnable2FA} disabled={twoFALoading || twoFAOtp.length !== 6}>
+                    {twoFALoading ? "Verifying..." : "Verify & Enable"}
+                  </Button>
+                </div>
+                <Button variant="outline" onClick={() => { setShow2FASetup(false); setTwoFAError(""); }} className="w-full">
+                  Cancel
+                </Button>
+              </div>
+            )}
+
+            {/* 2FA Disable Panel */}
+            {show2FADisable && (
+              <div className="border border-red-200 rounded-lg p-4 space-y-3 animate-fade-in bg-red-50/5">
+                <p className="font-medium text-sm">Disable Two-Factor Authentication</p>
+                <p className="text-sm text-helper">Enter your current authenticator code to confirm disabling 2FA.</p>
+                {twoFAError && (
+                  <p className="text-sm text-red-500">{twoFAError}</p>
+                )}
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Enter 6-digit code"
+                    value={twoFAOtp}
+                    onChange={(e) => { setTwoFAOtp(e.target.value.replace(/\D/g, "").slice(0, 6)); setTwoFAError(""); }}
+                    maxLength={6}
+                    className="flex-1 font-mono text-center text-lg tracking-widest"
+                  />
+                  <Button variant="outline" onClick={handleDisable2FA} disabled={twoFALoading || twoFAOtp.length !== 6} className="text-red-600 border-red-300">
+                    {twoFALoading ? "Disabling..." : "Confirm Disable"}
+                  </Button>
+                </div>
+                <Button variant="outline" onClick={() => { setShow2FADisable(false); setTwoFAError(""); }} className="w-full">
+                  Cancel
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -304,13 +509,11 @@ export default function SettingsPage() {
               {subscription?.status === "active" ? (
                 <Button
                   onClick={handleManageBilling}
-                  disabled={isBillingLoading}
                   variant="outline"
                   className="transform hover:scale-105 transition-all"
                 >
                   <CreditCard className="mr-2 h-4 w-4" />
-                  {isBillingLoading ? "Loading..." : "Manage Billing"}
-                  <ExternalLink className="ml-2 h-3 w-3" />
+                  Manage Subscription
                 </Button>
               ) : (
                 <Button onClick={() => router.push("/upgrade")} className="transform hover:scale-105 transition-all">

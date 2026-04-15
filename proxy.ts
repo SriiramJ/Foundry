@@ -3,13 +3,16 @@ import type { NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
 // Routes accessible without authentication
-const PUBLIC_ROUTES = ['/', '/login', '/register', '/reset-password', '/how-it-works']
+const PUBLIC_ROUTES = ['/', '/login', '/register', '/reset-password', '/how-it-works', '/2fa-verify']
 
 // API routes that don't require authentication
 const PUBLIC_API_ROUTES = [
   '/api/auth',
   '/api/register',
-  '/api/stripe/webhook',
+  '/api/razorpay/webhook',
+  '/api/2fa/verify',
+  '/api/forgot-password',
+  '/api/reset-password',
 ]
 
 // Routes only accessible by ADMIN role
@@ -29,7 +32,7 @@ const PROTECTED_ROUTES = [
   '/apply-mentor',
 ]
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Always allow static assets and Next.js internals
@@ -75,6 +78,16 @@ export async function middleware(request: NextRequest) {
     loginUrl.searchParams.set('callbackUrl', pathname)
     loginUrl.searchParams.set('error', 'SessionExpired')
     return NextResponse.redirect(loginUrl)
+  }
+
+  // ── 2FA gate ─────────────────────────────────────────────────────────────────
+  // If user has 2FA enabled but hasn't verified this session, force them to /2fa-verify
+  if (
+    (token as any).twoFactorEnabled &&
+    !(token as any).twoFactorVerified &&
+    pathname !== '/2fa-verify'
+  ) {
+    return NextResponse.redirect(new URL('/2fa-verify', request.url))
   }
 
   // ── ADMIN role ──────────────────────────────────────────────────────────────

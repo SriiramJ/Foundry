@@ -10,7 +10,6 @@ export default function UpgradeSuccessPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to dashboard after 5 seconds
     const timer = setTimeout(() => router.push("/dashboard"), 5000);
     return () => clearTimeout(timer);
   }, [router]);
@@ -24,7 +23,9 @@ export default function UpgradeSuccessPage() {
           </div>
           <h1 className="text-h2 font-bold mb-3">Payment Successful!</h1>
           <p className="text-body mb-2">Your subscription has been activated.</p>
-          <p className="text-helper text-sm mb-8">You now have access to all premium features. Redirecting to dashboard in 5 seconds...</p>
+          <p className="text-helper text-sm mb-8">
+            You now have access to all premium features. Redirecting to dashboard in 5 seconds...
+          </p>
           <div className="flex gap-3 justify-center">
             <Button onClick={() => router.push("/dashboard")} className="transform hover:scale-105 transition-all">
               Go to Dashboard

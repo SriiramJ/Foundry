@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Navigation } from "@/components/navigation";
+import { HeroCta, GetStartedCta } from "@/components/hero-cta";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,14 +20,7 @@ export default function Home() {
           <p className="text-body mb-8 text-xl max-w-2xl mx-auto animate-fade-in" style={{animationDelay: '0.2s'}}>
             Post your startup problems, get structured solutions from experienced entrepreneurs and mentors, and build a knowledge base for the entire community.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-scale-in" style={{animationDelay: '0.4s'}}>
-            <Link href="/register">
-              <Button size="lg" className="transform hover:scale-105 transition-transform">Start Solving Problems</Button>
-            </Link>
-            <Link href="/how-it-works">
-              <Button variant="secondary" size="lg" className="transform hover:scale-105 transition-transform">How it Works</Button>
-            </Link>
-          </div>
+          <HeroCta />
         </div>
       </section>
 
@@ -168,11 +162,7 @@ export default function Home() {
             </Card>
           </div>
           
-          <div className="mt-12 animate-scale-in">
-            <Link href="/register">
-              <Button size="lg" className="transform hover:scale-105 transition-transform">Get Started Free</Button>
-            </Link>
-          </div>
+          <GetStartedCta />
         </div>
       </section>
 

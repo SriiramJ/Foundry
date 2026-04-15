@@ -372,3 +372,88 @@ h1, h2, h3, h4, h5, h6 {
     animation-delay: 0s !important;
   }
 }
+
+/* ── Mobile Responsive Utilities ─────────────────────────────────────────── */
+
+/* Safe area padding for devices with notch/home indicator */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .mobile-safe-bottom {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Mobile card adjustments */
+@media (max-width: 768px) {
+  .problem-card {
+    padding: 1rem;
+    border-radius: 0.75rem;
+  }
+
+  .card-hover:hover {
+    transform: none; /* disable hover lift on touch */
+  }
+
+  /* Prevent horizontal overflow */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Full width buttons on mobile */
+  .mobile-full-btn {
+    width: 100%;
+  }
+
+  /* Tighter spacing on mobile */
+  .mobile-p {
+    padding: 1rem;
+  }
+
+  /* Stack grid columns on mobile */
+  .mobile-stack {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Smaller headings on mobile */
+  .text-h1 {
+    font-size: clamp(1.75rem, 6vw, 2.5rem);
+  }
+
+  .text-h2 {
+    font-size: clamp(1.5rem, 5vw, 2rem);
+  }
+
+  .text-h3 {
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
+  }
+
+  /* Hide scrollbar on mobile for horizontal scroll */
+  .mobile-scroll-x {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .mobile-scroll-x::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Touch-friendly tap targets */
+  button, a {
+    min-height: 44px;
+  }
+
+  /* Modal full screen on mobile */
+  .mobile-modal {
+    position: fixed;
+    inset: 0;
+    border-radius: 0;
+    max-height: 100vh;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .problem-card {
+    padding: 1.25rem;
+  }
+}

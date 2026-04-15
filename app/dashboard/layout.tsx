@@ -3,6 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
+import { MobileNav } from "@/components/mobile-nav";
 
 export default function DashboardLayout({
   children,
@@ -11,7 +12,6 @@ export default function DashboardLayout({
 }) {
   const { data: session, status } = useSession();
 
-  // Force sign out if token refresh failed
   useEffect(() => {
     if (session?.error === "RefreshTokenExpired" || session?.error === "UserNotFound") {
       signOut({ callbackUrl: "/login?error=SessionExpired" });
@@ -31,12 +31,20 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-background flex animate-fade-in">
-      <Sidebar />
-      <main className="flex-1 overflow-auto">
+      {/* Desktop Sidebar — hidden on mobile */}
+      <div className="hidden md:flex">
+        <Sidebar />
+      </div>
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-auto pb-20 md:pb-0">
         <div className="animate-fade-in">
           {children}
         </div>
       </main>
+
+      {/* Mobile Bottom Nav — hidden on desktop */}
+      <MobileNav />
     </div>
   );
 }

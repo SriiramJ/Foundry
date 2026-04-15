@@ -5,52 +5,10 @@ import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import crypto from "crypto"
 
-const ACCESS_TOKEN_EXPIRY = 24 * 60 * 60        // 1 day in seconds
-const REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60   // 7 days in seconds
+const SESSION_EXPIRY = 24 * 60 * 60  // 24 hours in seconds
 
 function generateToken() {
   return crypto.randomBytes(32).toString("hex")
-}
-
-async function refreshAccessToken(token: any) {
-  try {
-    // Verify refresh token is still valid (not expired)
-    if (!token.refreshToken || Date.now() > token.refreshTokenExpiry) {
-      return { ...token, error: "RefreshTokenExpired" }
-    }
-
-    // For admin, just reissue tokens
-    if (token.role === "ADMIN") {
-      return {
-        ...token,
-        accessToken: generateToken(),
-        accessTokenExpiry: Date.now() + ACCESS_TOKEN_EXPIRY * 1000,
-        error: undefined,
-      }
-    }
-
-    // Verify user still exists in DB
-    const user = await prisma.user.findUnique({
-      where: { id: token.sub! },
-      select: { id: true, role: true, email: true }
-    })
-
-    if (!user) {
-      return { ...token, error: "UserNotFound" }
-    }
-
-    return {
-      ...token,
-      role: user.role,
-      accessToken: generateToken(),
-      accessTokenExpiry: Date.now() + ACCESS_TOKEN_EXPIRY * 1000,
-      refreshToken: generateToken(),
-      refreshTokenExpiry: Date.now() + REFRESH_TOKEN_EXPIRY * 1000,
-      error: undefined,
-    }
-  } catch {
-    return { ...token, error: "RefreshAccessTokenError" }
-  }
 }
 
 export const authOptions: NextAuthOptions = {
@@ -75,6 +33,7 @@ export const authOptions: NextAuthOptions = {
             email: credentials.email,
             name: "Admin",
             role: "ADMIN",
+            twoFactorEnabled: false,
           }
         }
 
@@ -93,6 +52,7 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             name: user.name,
             role: user.role,
+            twoFactorEnabled: user.twoFactorEnabled,
           }
         } catch (error) {
           console.error("Auth error:", error)
@@ -103,31 +63,34 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: "jwt",
-    maxAge: REFRESH_TOKEN_EXPIRY, // session cookie lives as long as refresh token
+    maxAge: SESSION_EXPIRY,
   },
   jwt: {
-    maxAge: REFRESH_TOKEN_EXPIRY,
+    maxAge: SESSION_EXPIRY,
   },
   callbacks: {
-    async jwt({ token, user }) {
-      // Initial sign in — issue both tokens
+    async jwt({ token, user, trigger, session: sessionUpdate }) {
       if (user) {
         token.role = user.role
+        token.twoFactorEnabled = (user as any).twoFactorEnabled ?? false
+        token.twoFactorVerified = !(user as any).twoFactorEnabled // auto-verified if 2FA not enabled
         token.accessToken = generateToken()
-        token.accessTokenExpiry = Date.now() + ACCESS_TOKEN_EXPIRY * 1000
-        token.refreshToken = generateToken()
-        token.refreshTokenExpiry = Date.now() + REFRESH_TOKEN_EXPIRY * 1000
+        token.accessTokenExpiry = Date.now() + SESSION_EXPIRY * 1000
         token.error = undefined
         return token
       }
 
-      // Access token still valid — return as-is
+      // Handle session.update() call from 2FA verify page
+      if (trigger === "update" && sessionUpdate?.twoFactorVerified === true) {
+        token.twoFactorVerified = true
+        return token
+      }
+
       if (Date.now() < (token.accessTokenExpiry ?? 0)) {
         return token
       }
 
-      // Access token expired — attempt refresh
-      return refreshAccessToken(token)
+      return { ...token, error: "RefreshTokenExpired" }
     },
 
     async session({ session, token }) {
@@ -137,6 +100,8 @@ export const authOptions: NextAuthOptions = {
         session.accessToken = token.accessToken as string
         session.accessTokenExpiry = token.accessTokenExpiry as number
         session.error = token.error as string | undefined
+        ;(session as any).twoFactorEnabled = token.twoFactorEnabled
+        ;(session as any).twoFactorVerified = token.twoFactorVerified
       }
       return session
     }

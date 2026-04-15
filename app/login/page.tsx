@@ -38,10 +38,12 @@ function LoginForm() {
       if (result?.error) {
         setError("Invalid credentials");
       } else {
-        const session = await getSession();
+        const session = await getSession() as any;
         const callbackUrl = searchParams.get('callbackUrl');
         if (session?.user?.role === 'ADMIN') {
           router.push("/admin");
+        } else if (session?.twoFactorEnabled && !session?.twoFactorVerified) {
+          router.push("/2fa-verify");
         } else if (callbackUrl && callbackUrl.startsWith('/') && !callbackUrl.startsWith('/login')) {
           router.push(callbackUrl);
         } else {
@@ -128,7 +130,12 @@ function LoginForm() {
               </Button>
             </form>
             
-            <div className="text-center mt-4 animate-fade-in" style={{animationDelay: '0.6s'}}>
+            <div className="text-center mt-4 space-y-2 animate-fade-in" style={{animationDelay: '0.6s'}}>
+              <p className="text-helper">
+                <Link href="/reset-password" className="text-accent hover:underline transition-all hover:text-accent/80">
+                  Forgot your password?
+                </Link>
+              </p>
               <p className="text-helper">
                 Don&apos;t have an account?{" "}
                 <Link href="/register" className="text-accent hover:underline transition-all hover:text-accent/80">

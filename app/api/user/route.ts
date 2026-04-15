@@ -49,6 +49,8 @@ export async function GET() {
 
     return NextResponse.json({
       ...user,
+      twoFactorEnabled: user.twoFactorEnabled,
+      twoFactorSecret: undefined, // never expose secret
       upvotesReceived,
       verifiedSolutions,
       mentorApplication: user.mentorApplication
