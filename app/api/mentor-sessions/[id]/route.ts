@@ -16,6 +16,18 @@ export async function PATCH(
     const { id } = await params;
     const { status, meetLink, notes } = await request.json();
 
+    // Validate meetLink if provided
+    if (meetLink !== undefined && meetLink !== null && meetLink !== "") {
+      try { new URL(meetLink); } catch {
+        return NextResponse.json({ error: "Invalid meeting link URL" }, { status: 400 });
+      }
+    }
+
+    // Require meetLink when confirming
+    if (status === "CONFIRMED" && !meetLink?.trim()) {
+      return NextResponse.json({ error: "A meeting link is required to confirm the session" }, { status: 400 });
+    }
+
     const mentorSession = await prisma.mentorSession.findUnique({ where: { id } });
     if (!mentorSession) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });

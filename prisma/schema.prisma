@@ -176,7 +176,7 @@ model MentorSession {
   topic       String
   description String?
   scheduledAt DateTime
-  duration    Int                 @default(60) // minutes
+  duration    Int                 @default(60)
   status      MentorSessionStatus @default(PENDING)
   meetLink    String?
   notes       String?
@@ -189,7 +189,7 @@ model MentorSession {
   learnerId   String @db.ObjectId
 }
 
-
+model PasswordResetToken {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   token     String   @unique
   userId    String   @db.ObjectId

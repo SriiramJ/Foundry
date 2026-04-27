@@ -10,6 +10,10 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Admin is not a DB user
+    if (session.user.id === "admin") {
+      return NextResponse.json([]);
+    }
     const [recentSolutions, recentProblems, recentVotes] = await Promise.all([
       prisma.solution.findMany({
         where: { 

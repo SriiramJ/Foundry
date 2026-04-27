@@ -21,11 +21,20 @@ import {
   Search,
 } from "lucide-react";
 
-const navigation = [
+const userNavigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Post Problem", href: "/post-problem", icon: Plus },
   { name: "Knowledge Base", href: "/knowledge-base", icon: BookOpen },
   { name: "Mentors", href: "/mentors", icon: Users },
+  { name: "Messages", href: "/messages", icon: MessageCircle },
+  { name: "Sessions", href: "/mentor-sessions", icon: Calendar },
+  { name: "Analytics", href: "/analytics", icon: BarChart2 },
+  { name: "Settings", href: "/settings", icon: Settings },
+];
+
+const mentorNavigation = [
+  { name: "Dashboard", href: "/dashboard", icon: Home },
+  { name: "Knowledge Base", href: "/knowledge-base", icon: BookOpen },
   { name: "Messages", href: "/messages", icon: MessageCircle },
   { name: "Sessions", href: "/mentor-sessions", icon: Calendar },
   { name: "Analytics", href: "/analytics", icon: BarChart2 },
@@ -41,7 +50,9 @@ export function Sidebar() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const isMentor = session?.user?.role === "MENTOR";
   const isAdmin = session?.user?.role === "ADMIN";
+  const navigation = isMentor ? mentorNavigation : userNavigation;
 
   useEffect(() => {
     if (session?.user) {

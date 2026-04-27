@@ -10,6 +10,20 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Admin is not a DB user — return empty dashboard
+    if (session.user.id === "admin") {
+      return NextResponse.json({
+        problemsPosted: 0,
+        solutionsReceived: 0,
+        reputation: 0,
+        isPremium: false,
+        role: "ADMIN",
+        mentorApplication: null,
+        upvotesReceived: 0,
+        subscription: null,
+        weeklyChanges: { problems: 0, solutions: 0, reputation: 0 },
+      });
+    }
     const now = new Date();
     const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);

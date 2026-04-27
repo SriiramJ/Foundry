@@ -20,6 +20,66 @@ const STATUS_STYLES: Record<string, string> = {
   CANCELLED: "bg-muted text-muted-foreground border-border",
 };
 
+function ApproveModal({ session: s, onClose, onDone }: { session: any; onClose: () => void; onDone: () => void }) {
+  const [meetLink, setMeetLink] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleApprove = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!meetLink.trim()) { setError("Meeting link is required."); return; }
+    try { new URL(meetLink); } catch { setError("Please enter a valid URL."); return; }
+    setSubmitting(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/mentor-sessions/${s.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "CONFIRMED", meetLink }),
+      });
+      if (res.ok) { onDone(); onClose(); }
+      else { const d = await res.json(); setError(d.error || "Failed to confirm."); }
+    } catch { setError("Something went wrong."); }
+    finally { setSubmitting(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-fade-in">
+      <div className="bg-background border border-border rounded-xl w-full max-w-md shadow-2xl animate-scale-in">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <h2 className="text-base font-semibold">Approve Session</h2>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <form onSubmit={handleApprove} className="px-6 py-5 space-y-4">
+          <div className="text-sm text-helper font-mono space-y-1">
+            <p><span className="text-foreground font-medium">Topic:</span> {s.topic}</p>
+            <p><span className="text-foreground font-medium">Learner:</span> {s.learner?.name}</p>
+            <p><span className="text-foreground font-medium">Scheduled:</span> {new Date(s.scheduledAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })} · {s.duration} min</p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Meeting Link <span className="text-red-400">*</span></label>
+            <Input
+              placeholder="https://meet.google.com/... or https://zoom.us/j/..."
+              value={meetLink}
+              onChange={(e) => setMeetLink(e.target.value)}
+            />
+            <p className="text-xs text-helper font-mono">Google Meet, Zoom, Teams, or any valid meeting URL.</p>
+          </div>
+          {error && <p className="text-sm text-red-400 font-mono">{error}</p>}
+          <div className="flex gap-3 pt-1">
+            <Button type="button" variant="secondary" className="flex-1" onClick={onClose} disabled={submitting}>Cancel</Button>
+            <Button type="submit" className="flex-1" disabled={submitting}>
+              {submitting ? <span className="flex items-center gap-2"><div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white" />Approving...</span> : <><CheckCircle className="h-3.5 w-3.5 mr-1" />Approve</>}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function SessionCard({
   session: s,
   role,
@@ -29,7 +89,7 @@ function SessionCard({
   role: "mentor" | "learner";
   onAction: () => void;
 }) {
-  const [meetLink, setMeetLink] = useState(s.meetLink || "");
+  const [showApprove, setShowApprove] = useState(false);
   const [updating, setUpdating] = useState(false);
 
   const update = async (payload: object) => {
@@ -41,10 +101,7 @@ function SessionCard({
         body: JSON.stringify(payload),
       });
       if (res.ok) onAction();
-      else {
-        const d = await res.json();
-        alert(d.error || "Failed to update session");
-      }
+      else { const d = await res.json(); alert(d.error || "Failed to update session"); }
     } catch { alert("Something went wrong"); }
     finally { setUpdating(false); }
   };
@@ -52,72 +109,60 @@ function SessionCard({
   const isPast = new Date(s.scheduledAt) < new Date();
 
   return (
-    <Card className="problem-card animate-scale-in">
-      <CardContent className="pt-5 pb-5">
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex-1 min-w-0">
-            <p className="font-medium font-sans truncate">{s.topic}</p>
-            {s.description && (
-              <p className="text-xs text-helper font-mono mt-0.5 line-clamp-2">{s.description}</p>
-            )}
-          </div>
-          <span className={`text-xs px-2 py-1 rounded-full border font-mono flex-shrink-0 ${STATUS_STYLES[s.status]}`}>
-            {s.status}
-          </span>
-        </div>
-
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-helper font-mono mb-3">
-          <span className="flex items-center gap-1">
-            <User className="h-3 w-3" />
-            {role === "mentor" ? `Learner: ${s.learner?.name}` : `Mentor: ${s.mentor?.name}`}
-          </span>
-          <span className="flex items-center gap-1">
-            <Calendar className="h-3 w-3" />
-            {new Date(s.scheduledAt).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
-          </span>
-          <span className="flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            {new Date(s.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · {s.duration} min
-          </span>
-        </div>
-
-        {/* Meet link */}
-        {s.meetLink && (
-          <a
-            href={s.meetLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-accent hover:underline font-mono mb-3"
-          >
-            <Video className="h-3.5 w-3.5" />
-            Join Meeting
-            <ExternalLink className="h-3 w-3" />
-          </a>
-        )}
-
-        {/* Mentor actions */}
-        {role === "mentor" && s.status === "PENDING" && (
-          <div className="space-y-2">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Add Google Meet / Zoom link..."
-                value={meetLink}
-                onChange={(e) => setMeetLink(e.target.value)}
-                className="flex-1 text-xs font-mono h-8"
-              />
+    <>
+      {showApprove && (
+        <ApproveModal session={s} onClose={() => setShowApprove(false)} onDone={onAction} />
+      )}
+      <Card className="problem-card animate-scale-in">
+        <CardContent className="pt-5 pb-5">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex-1 min-w-0">
+              <p className="font-medium font-sans truncate">{s.topic}</p>
+              {s.description && (
+                <p className="text-xs text-helper font-mono mt-0.5 line-clamp-2">{s.description}</p>
+              )}
             </div>
+            <span className={`text-xs px-2 py-1 rounded-full border font-mono flex-shrink-0 ${STATUS_STYLES[s.status]}`}>
+              {s.status}
+            </span>
+          </div>
+
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-helper font-mono mb-3">
+            <span className="flex items-center gap-1">
+              <User className="h-3 w-3" />
+              {role === "mentor" ? `Learner: ${s.learner?.name}` : `Mentor: ${s.mentor?.name}`}
+            </span>
+            <span className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              {new Date(s.scheduledAt).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+            </span>
+            <span className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {new Date(s.scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · {s.duration} min
+            </span>
+          </div>
+
+          {s.meetLink && (
+            <a
+              href={s.meetLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-xs text-accent hover:underline font-mono mb-3"
+            >
+              <Video className="h-3.5 w-3.5" />
+              Join Meeting
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          )}
+
+          {/* Mentor actions */}
+          {role === "mentor" && s.status === "PENDING" && (
             <div className="flex gap-2">
-              <Button
-                size="sm"
-                className="flex-1 text-xs"
-                disabled={updating}
-                onClick={() => update({ status: "CONFIRMED", meetLink: meetLink || undefined })}
-              >
-                <CheckCircle className="h-3.5 w-3.5 mr-1" />Confirm
+              <Button size="sm" className="flex-1 text-xs" onClick={() => setShowApprove(true)}>
+                <CheckCircle className="h-3.5 w-3.5 mr-1" />Approve
               </Button>
               <Button
-                size="sm"
-                variant="outline"
+                size="sm" variant="outline"
                 className="flex-1 text-xs text-red-500 border-red-300"
                 disabled={updating}
                 onClick={() => update({ status: "CANCELLED" })}
@@ -125,34 +170,27 @@ function SessionCard({
                 <X className="h-3.5 w-3.5 mr-1" />Decline
               </Button>
             </div>
-          </div>
-        )}
+          )}
 
-        {role === "mentor" && s.status === "CONFIRMED" && isPast && (
-          <Button
-            size="sm"
-            className="w-full text-xs"
-            disabled={updating}
-            onClick={() => update({ status: "COMPLETED" })}
-          >
-            <CheckCircle className="h-3.5 w-3.5 mr-1" />Mark as Completed
-          </Button>
-        )}
+          {role === "mentor" && s.status === "CONFIRMED" && isPast && (
+            <Button size="sm" className="w-full text-xs" disabled={updating} onClick={() => update({ status: "COMPLETED" })}>
+              <CheckCircle className="h-3.5 w-3.5 mr-1" />Mark as Completed
+            </Button>
+          )}
 
-        {/* Learner cancel */}
-        {role === "learner" && (s.status === "PENDING" || s.status === "CONFIRMED") && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-xs text-red-500 border-red-300"
-            disabled={updating}
-            onClick={() => update({ status: "CANCELLED" })}
-          >
-            <X className="h-3.5 w-3.5 mr-1" />Cancel Session
-          </Button>
-        )}
-      </CardContent>
-    </Card>
+          {role === "learner" && (s.status === "PENDING" || s.status === "CONFIRMED") && (
+            <Button
+              size="sm" variant="outline"
+              className="text-xs text-red-500 border-red-300"
+              disabled={updating}
+              onClick={() => update({ status: "CANCELLED" })}
+            >
+              <X className="h-3.5 w-3.5 mr-1" />Cancel Session
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+    </>
   );
 }
 

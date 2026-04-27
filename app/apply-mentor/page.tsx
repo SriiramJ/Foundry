@@ -25,6 +25,10 @@ export default function ApplyMentorPage() {
 
   useEffect(() => {
     if (session?.user) {
+      if ((session.user as any).role === "MENTOR") {
+        router.replace("/dashboard");
+        return;
+      }
       checkExistingApplication();
     }
   }, [session]);

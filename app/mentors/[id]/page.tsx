@@ -125,6 +125,7 @@ export default function MentorProfilePage({ params }: { params: Promise<{ id: st
   const [loading, setLoading] = useState(true);
   const [isPro, setIsPro] = useState(false);
   const [isSelfMentor, setIsSelfMentor] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [showBookModal, setShowBookModal] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
@@ -146,6 +147,7 @@ export default function MentorProfilePage({ params }: { params: Promise<{ id: st
           (!sub.endDate || new Date(sub.endDate) > new Date());
         setIsPro(proActive);
         setIsSelfMentor(data.role === "MENTOR");
+        setCurrentUserId(data.id);
       })
       .catch(() => {});
   }, [id]);
@@ -169,6 +171,9 @@ export default function MentorProfilePage({ params }: { params: Promise<{ id: st
       </div>
     );
   }
+
+  const isSelf = mentor?.id === currentUserId;
+  const isMentorUser = isSelfMentor;
 
   return (
     <div className="p-6 max-w-4xl mx-auto animate-fade-in">
@@ -196,6 +201,7 @@ export default function MentorProfilePage({ params }: { params: Promise<{ id: st
                 <h1 className="text-h2 font-bold">{mentor.name}</h1>
                 {mentor.isVerified && <Badge variant="verified">Verified</Badge>}
                 {mentor.isPremium && <Badge variant="premium">Premium</Badge>}
+                {isSelf && <Badge variant="default">You</Badge>}
               </div>
               <p className="text-helper mb-3">{mentor.title}</p>
               <p className="text-body mb-4">{mentor.bio}</p>
@@ -204,33 +210,35 @@ export default function MentorProfilePage({ params }: { params: Promise<{ id: st
                   <Badge key={skill} variant="default" className="text-xs">{skill}</Badge>
                 ))}
               </div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="secondary"
-                  onClick={() => router.push(`/messages?mentorId=${mentor.id}&mentorName=${encodeURIComponent(mentor.name)}`)}
-                  className="transform hover:scale-105 transition-all"
-                >
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  Ask a Question
-                </Button>
-                {(isPro || isSelfMentor) ? (
+              {!isSelf && !isMentorUser && (
+                <div className="flex flex-wrap gap-2">
                   <Button
-                    onClick={() => { setBookingSuccess(false); setShowBookModal(true); }}
+                    variant="secondary"
+                    onClick={() => router.push(`/messages?mentorId=${mentor.id}&mentorName=${encodeURIComponent(mentor.name)}`)}
                     className="transform hover:scale-105 transition-all"
                   >
-                    <Video className="mr-2 h-4 w-4" />
-                    Book Session
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Ask a Question
                   </Button>
-                ) : (
-                  <Link href="/upgrade">
-                    <Button variant="outline" className="transform hover:scale-105 transition-all border-accent/30">
-                      <Lock className="mr-2 h-4 w-4" />
-                      <Crown className="mr-1 h-3 w-3 text-warning" />
-                      Pro: Book Session
+                  {isPro ? (
+                    <Button
+                      onClick={() => { setBookingSuccess(false); setShowBookModal(true); }}
+                      className="transform hover:scale-105 transition-all"
+                    >
+                      <Video className="mr-2 h-4 w-4" />
+                      Book Session
                     </Button>
-                  </Link>
-                )}
-              </div>
+                  ) : (
+                    <Link href="/upgrade">
+                      <Button variant="outline" className="transform hover:scale-105 transition-all border-accent/30">
+                        <Lock className="mr-2 h-4 w-4" />
+                        <Crown className="mr-1 h-3 w-3 text-warning" />
+                        Pro: Book Session
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              )}
               {bookingSuccess && (
                 <p className="text-sm text-success font-mono mt-3 flex items-center gap-1 animate-fade-in">
                   <CheckCircle className="h-4 w-4" /> Session booked! View it in{" "}

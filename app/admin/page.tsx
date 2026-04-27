@@ -5,7 +5,100 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { CheckCircle, X, AlertCircle, Clock, User, Users, Crown, Search } from "lucide-react";
+import { CheckCircle, X, AlertCircle, Clock, User, Users, Crown, Search, ChevronDown, Zap, Star } from "lucide-react";
+
+// ── Plan Dropdown ────────────────────────────────────────────────────────────
+const PLANS = [
+  {
+    value: "FREE",
+    label: "Free",
+    icon: Zap,
+    color: "text-muted-foreground",
+    bg: "bg-muted/50",
+    border: "border-border",
+  },
+  {
+    value: "PREMIUM",
+    label: "Premium",
+    icon: Star,
+    color: "text-warning",
+    bg: "bg-warning/10",
+    border: "border-warning/30",
+  },
+  {
+    value: "PRO",
+    label: "Pro",
+    icon: Crown,
+    color: "text-accent",
+    bg: "bg-accent/10",
+    border: "border-accent/30",
+  },
+];
+
+function PlanDropdown({
+  currentPlan,
+  userId,
+  disabled,
+  onSelect,
+}: {
+  currentPlan: string;
+  userId: string;
+  disabled: boolean;
+  onSelect: (userId: string, plan: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = PLANS.find((p) => p.value === currentPlan) || PLANS[0];
+  const Icon = selected.icon;
+
+  return (
+    <div className="relative inline-block text-left">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        disabled={disabled}
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-medium font-mono transition-all hover:scale-105 ${
+          selected.bg
+        } ${
+          selected.border
+        } ${
+          selected.color
+        } disabled:opacity-50 disabled:cursor-not-allowed`}
+      >
+        <Icon className="h-3.5 w-3.5" />
+        {selected.label}
+        <ChevronDown className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <>
+          {/* Backdrop */}
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          {/* Menu */}
+          <div className="absolute right-0 z-20 mt-1.5 w-36 rounded-xl border border-border bg-background shadow-lg overflow-hidden animate-scale-in">
+            {PLANS.map((plan) => {
+              const PlanIcon = plan.icon;
+              const isActive = plan.value === currentPlan;
+              return (
+                <button
+                  key={plan.value}
+                  onClick={() => { setOpen(false); if (!isActive) onSelect(userId, plan.value); }}
+                  className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs font-mono transition-colors ${
+                    isActive
+                      ? `${plan.bg} ${plan.color} font-semibold`
+                      : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <PlanIcon className={`h-3.5 w-3.5 ${isActive ? plan.color : ""}`} />
+                  {plan.label}
+                  {isActive && <CheckCircle className="h-3 w-3 ml-auto" />}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 // ── Mentor Applications Tab ───────────────────────────────────────────────────
 function MentorApplicationsTab() {
@@ -162,17 +255,21 @@ function UsersTab() {
     }
   };
 
-  const handleTogglePremium = async (userId: string, currentIsPremium: boolean) => {
+  const handleSetPlan = async (userId: string, plan: string) => {
     setTogglingId(userId);
     try {
       const res = await fetch("/api/admin/users", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, isPremium: !currentIsPremium }),
+        body: JSON.stringify({ userId, plan }),
       });
       if (res.ok) {
         setUsers((prev) =>
-          prev.map((u) => u.id === userId ? { ...u, isPremium: !currentIsPremium } : u)
+          prev.map((u) =>
+            u.id === userId
+              ? { ...u, isPremium: plan !== "FREE", subscription: { ...u.subscription, plan, status: plan !== "FREE" ? "active" : "cancelled" } }
+              : u
+          )
         );
       } else {
         alert("Failed to update user");
@@ -258,7 +355,7 @@ function UsersTab() {
                   <th className="text-left p-4 font-medium text-muted-foreground">Role</th>
                   <th className="text-left p-4 font-medium text-muted-foreground">Plan</th>
                   <th className="text-left p-4 font-medium text-muted-foreground">Joined</th>
-                  <th className="text-right p-4 font-medium text-muted-foreground">Premium Access</th>
+                  <th className="text-right p-4 font-medium text-muted-foreground">Plan Access</th>
                 </tr>
               </thead>
               <tbody>
@@ -296,24 +393,19 @@ function UsersTab() {
                       {new Date(user.createdAt).toLocaleDateString()}
                     </td>
                     <td className="p-4 text-right">
-                      <Button
-                        size="sm"
-                        variant={user.isPremium ? "outline" : "default"}
-                        onClick={() => handleTogglePremium(user.id, user.isPremium)}
-                        disabled={togglingId === user.id}
-                        className="transform hover:scale-105 transition-all text-xs"
-                      >
-                        {togglingId === user.id ? (
-                          <span className="flex items-center gap-1">
-                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current" />
-                            Updating...
-                          </span>
-                        ) : user.isPremium ? (
-                          <span className="flex items-center gap-1"><X className="h-3 w-3" />Revoke Premium</span>
-                        ) : (
-                          <span className="flex items-center gap-1"><Crown className="h-3 w-3" />Grant Premium</span>
-                        )}
-                      </Button>
+                      {togglingId === user.id ? (
+                        <div className="flex items-center justify-end gap-1.5 text-xs text-helper font-mono">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-accent" />
+                          Updating...
+                        </div>
+                      ) : (
+                        <PlanDropdown
+                          currentPlan={user.subscription?.plan || "FREE"}
+                          userId={user.id}
+                          disabled={togglingId !== null}
+                          onSelect={handleSetPlan}
+                        />
+                      )}
                     </td>
                   </tr>
                 ))}

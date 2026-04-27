@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Send, MessageCircle, User, ArrowLeft } from "lucide-react";
+import { Send, MessageCircle, User, ArrowLeft, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 function MessagesContent() {
@@ -37,6 +37,22 @@ function MessagesContent() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (!activeConversation) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/messages/${activeConversation.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setMessages(prev =>
+            data.messages.length !== prev.length ? data.messages : prev
+          );
+        }
+      } catch {}
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [activeConversation]);
 
   const fetchConversations = async () => {
     try {
@@ -164,20 +180,26 @@ function MessagesContent() {
               <>
                 {/* Chat Header with back button on mobile */}
                 <CardHeader className="pb-3 border-b border-border flex-shrink-0">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 w-full">
                     <button
-                      onClick={() => setMobileView("list")}
-                      className="md:hidden p-1 rounded-lg hover:bg-muted transition-colors"
+                      onClick={() => { setMobileView("list"); setActiveConversation(null); setMessages([]); }}
+                      className="p-1 rounded-lg hover:bg-muted transition-colors"
                     >
                       <ArrowLeft className="h-5 w-5" />
                     </button>
                     <div className="w-9 h-9 bg-accent rounded-full flex items-center justify-center">
                       <User className="h-4 w-4 text-accent-foreground" />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <CardTitle className="text-base">{activeConversation.name}</CardTitle>
                       <Badge variant="default" className="text-xs">{activeConversation.role}</Badge>
                     </div>
+                    <button
+                      onClick={() => { setMobileView("list"); setActiveConversation(null); setMessages([]); }}
+                      className="p-1 rounded-lg hover:bg-muted transition-colors ml-auto"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
                   </div>
                 </CardHeader>
 
