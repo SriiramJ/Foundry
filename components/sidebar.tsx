@@ -17,6 +17,8 @@ import {
   Shield,
   MessageCircle,
   BarChart2,
+  Calendar,
+  Search,
 } from "lucide-react";
 
 const navigation = [
@@ -25,6 +27,7 @@ const navigation = [
   { name: "Knowledge Base", href: "/knowledge-base", icon: BookOpen },
   { name: "Mentors", href: "/mentors", icon: Users },
   { name: "Messages", href: "/messages", icon: MessageCircle },
+  { name: "Sessions", href: "/mentor-sessions", icon: Calendar },
   { name: "Analytics", href: "/analytics", icon: BarChart2 },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
@@ -46,6 +49,18 @@ export function Sidebar() {
       fetchAvatar();
     }
   }, [session, pathname]);
+
+  // Keyboard shortcut: press "/" to focus search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "/" && !(["INPUT", "TEXTAREA"].includes((e.target as HTMLElement).tagName))) {
+        e.preventDefault();
+        window.location.href = "/search";
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const fetchUnreadCount = async () => {
     try {
@@ -122,6 +137,18 @@ export function Sidebar() {
         >
           {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </Button>
+      </div>
+
+      {/* Search */}
+      <div className="px-4 py-3">
+        <Link
+          href="/search"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:text-accent hover:border-accent/30 transition-all font-mono"
+        >
+          <Search className="h-4 w-4 flex-shrink-0" />
+          <span>Search...</span>
+          <kbd className="ml-auto text-xs bg-muted px-1.5 py-0.5 rounded font-mono">/</kbd>
+        </Link>
       </div>
 
       {/* Nav */}

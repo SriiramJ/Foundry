@@ -7,7 +7,7 @@ import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import {
   Home, Plus, BookOpen, Users, User, MessageCircle,
-  Shield, Menu, X, Settings, Star, Sun, Moon, LogOut, Camera,
+  Shield, Menu, X, Settings, Star, Sun, Moon, LogOut, Camera, Calendar, Search,
 } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 import { signOut } from "next-auth/react";
@@ -26,6 +26,8 @@ const drawerNav = [
   { name: "Knowledge Base", href: "/knowledge-base", icon: BookOpen },
   { name: "Mentors", href: "/mentors", icon: Users },
   { name: "Messages", href: "/messages", icon: MessageCircle },
+  { name: "Sessions", href: "/mentor-sessions", icon: Calendar },
+  { name: "Search", href: "/search", icon: Search },
   { name: "Profile", href: "/profile", icon: User },
   { name: "Upgrade", href: "/upgrade", icon: Star },
   { name: "Settings", href: "/settings", icon: Settings },

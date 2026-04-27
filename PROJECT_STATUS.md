@@ -199,11 +199,11 @@ Foundry is a community platform for entrepreneurs to post startup problems, rece
 | Email notifications | SMTP configured, not triggered on events | done
 | Weekly digest emails | Toggle in settings, not implemented | done
 | Advanced analytics for premium users | Mentioned in pricing, not built |
-| 1-on-1 mentor sessions | Listed in Pro plan, not built |
+| 1-on-1 mentor sessions | Listed in Pro plan, not built | done
 | Premium content locking | Partial UI (lock icon commented out) |
 | OAuth providers (Google, GitHub) | Not configured |
 | Image upload for profiles | No file upload |
-| Search across entire platform | Per-page only |
+| Search across entire platform | Per-page only | done
 
 ---
 
