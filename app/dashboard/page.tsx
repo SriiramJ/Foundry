@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { Plus, MessageSquare, CheckCircle, TrendingUp, Star } from "lucide-react";
+import { Plus, MessageSquare, CheckCircle, TrendingUp, Star, Crown, Calendar } from "lucide-react";
 
 function RecentActivity() {
   const [activities, setActivities] = useState<any[]>([]);
@@ -195,15 +195,38 @@ export default function DashboardPage() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-medium text-muted-foreground">Account Status</CardTitle>
-                  <Badge className={`${dashboardData?.isPremium ? 'mentor-badge' : 'bg-muted/50 text-muted-foreground border border-border'} text-xs`}>
-                    {dashboardData?.isPremium ? 'Premium' : 'Free'}
-                  </Badge>
+                  {dashboardData?.subscription?.status === 'active' ? (
+                    <Crown className="h-4 w-4 text-warning" />
+                  ) : (
+                    <Star className="h-4 w-4 text-muted-foreground" />
+                  )}
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                <Link href="/upgrade">
-                  <Button className="btn-premium text-xs w-full">Upgrade</Button>
-                </Link>
+                {dashboardData?.subscription?.status === 'active' ? (
+                  <>
+                    <div className="text-2xl font-bold text-foreground capitalize">
+                      {dashboardData.subscription.plan.charAt(0) + dashboardData.subscription.plan.slice(1).toLowerCase()}
+                    </div>
+                    {dashboardData.subscription.endDate && (
+                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        Expires {new Date(dashboardData.subscription.endDate).toLocaleDateString()}
+                      </p>
+                    )}
+                    <Link href="/upgrade" className="block mt-2">
+                      <Button variant="outline" className="text-xs w-full border-border hover:border-accent/30">Manage Plan</Button>
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold text-foreground">Free</div>
+                    <p className="text-xs text-muted-foreground mt-1">Upgrade for more features</p>
+                    <Link href="/upgrade" className="block mt-2">
+                      <Button className="btn-premium text-xs w-full">Upgrade</Button>
+                    </Link>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>

@@ -109,6 +109,16 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login"
   },
+  events: {
+    async signOut({ token }: any) {
+      // Clean up any DB sessions for this user (PrismaAdapter may create them)
+      if (token?.sub && token.sub !== "admin") {
+        try {
+          await prisma.session.deleteMany({ where: { userId: token.sub } });
+        } catch {}
+      }
+    },
+  },
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === "development",
 }

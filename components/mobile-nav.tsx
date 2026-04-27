@@ -3,23 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import {
-  Home,
-  Plus,
-  BookOpen,
-  Users,
-  User,
-  MessageCircle,
-  Shield,
-  Menu,
-  X,
-  Settings,
-  Star,
-  Sun,
-  Moon,
-  LogOut
+  Home, Plus, BookOpen, Users, User, MessageCircle,
+  Shield, Menu, X, Settings, Star, Sun, Moon, LogOut, Camera,
 } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 import { signOut } from "next-auth/react";
@@ -49,11 +37,17 @@ export function MobileNav() {
   const { theme, toggleTheme } = useTheme();
   const [unreadCount, setUnreadCount] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isAdmin = session?.user?.role === "ADMIN";
 
   useEffect(() => {
-    if (session?.user) fetchUnreadCount();
+    if (session?.user) {
+      fetchUnreadCount();
+      fetchAvatar();
+    }
   }, [session, pathname]);
 
   useEffect(() => {
@@ -69,6 +63,39 @@ export function MobileNav() {
         setUnreadCount(total);
       }
     } catch {}
+  };
+
+  const fetchAvatar = async () => {
+    try {
+      const res = await fetch("/api/user");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.image) setAvatar(data.image);
+      }
+    } catch {}
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { alert("Image must be under 2MB."); return; }
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result as string;
+      try {
+        const res = await fetch("/api/user", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: base64 }),
+        });
+        if (res.ok) setAvatar(base64);
+        else alert("Failed to upload avatar.");
+      } catch { alert("Upload failed."); }
+      finally { setUploading(false); }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   };
 
   return (
@@ -127,11 +154,38 @@ export function MobileNav() {
           drawerOpen ? "translate-y-0" : "translate-y-full"
         )}
       >
-        {/* Drawer Handle */}
+        {/* Drawer Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
-              <User className="h-4 w-4 text-accent-foreground" />
+            {/* Avatar with upload */}
+            <div className="relative">
+              <div className="w-9 h-9 rounded-full overflow-hidden bg-accent/20 flex items-center justify-center">
+                {avatar ? (
+                  <img src={avatar} alt="avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-sm font-bold text-accent">
+                    {session?.user?.name?.[0]?.toUpperCase() || "?"}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+              >
+                {uploading
+                  ? <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white" />
+                  : <Camera className="h-3 w-3 text-white" />
+                }
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
             </div>
             <div>
               <p className="text-sm font-medium">{session?.user?.name}</p>

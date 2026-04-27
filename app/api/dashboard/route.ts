@@ -64,21 +64,15 @@ export async function GET() {
       prisma.solution.count({ where: { authorId: session.user.id } }),
       prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { 
-          reputation: true, 
-          isPremium: true, 
-          role: true,
-          mentorApplication: true 
-        }
+        select: { reputation: true, isPremium: true, role: true },
       })
     ]);
 
-    const totalUpvotes = await prisma.vote.count({
-      where: {
-        type: "UP",
-        solution: { authorId: session.user.id }
-      }
-    });
+    const [totalUpvotes, mentorApplication, subscription] = await Promise.all([
+      prisma.vote.count({ where: { type: "UP", solution: { authorId: session.user.id } } }),
+      prisma.mentorApplication.findUnique({ where: { userId: session.user.id } }),
+      prisma.subscription.findUnique({ where: { userId: session.user.id } }),
+    ]);
 
     return NextResponse.json({
       problemsPosted: totalProblems,
@@ -86,8 +80,13 @@ export async function GET() {
       reputation: user?.reputation || 0,
       isPremium: user?.isPremium || false,
       role: user?.role || 'EXPLORER',
-      mentorApplication: user?.mentorApplication || null,
+      mentorApplication: mentorApplication || null,
       upvotesReceived: totalUpvotes,
+      subscription: subscription ? {
+        plan: subscription.plan,
+        status: subscription.status,
+        endDate: subscription.endDate,
+      } : null,
       weeklyChanges: {
         problems: currentWeek[0] - previousWeek[0],
         solutions: currentWeek[1] - previousWeek[1],

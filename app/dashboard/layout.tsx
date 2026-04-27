@@ -32,7 +32,7 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen bg-background flex animate-fade-in">
       {/* Desktop Sidebar — hidden on mobile */}
-      <div className="hidden md:flex">
+      <div className="hidden md:flex sticky top-0 h-screen">
         <Sidebar />
       </div>
 
