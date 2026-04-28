@@ -5,17 +5,129 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   ArrowLeft, Star, CheckCircle, MessageCircle, User,
-  Calendar, Clock, ThumbsUp, Shield, Briefcase
+  Calendar, Clock, ThumbsUp, Shield, Briefcase, Video, X, Crown, Lock
 } from "lucide-react";
 import Link from "next/link";
+
+function BookSessionModal({ mentor, onClose, onBooked }: { mentor: any; onClose: () => void; onBooked: () => void }) {
+  const [form, setForm] = useState({ topic: "", description: "", scheduledAt: "", duration: 60 });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const minDate = (() => {
+    const d = new Date(Date.now() + 60 * 60 * 1000);
+    d.setMinutes(d.getMinutes() >= 30 ? 60 : 30, 0, 0);
+    return d.toISOString().slice(0, 16);
+  })();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.topic.trim() || !form.scheduledAt) { setError("Topic and date/time are required."); return; }
+    setSubmitting(true);
+    setError("");
+    try {
+      const res = await fetch("/api/mentor-sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mentorId: mentor.id,
+          topic: form.topic,
+          description: form.description || undefined,
+          scheduledAt: new Date(form.scheduledAt).toISOString(),
+          duration: form.duration,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) onBooked();
+      else setError(data.error || "Failed to book session.");
+    } catch { setError("Something went wrong."); }
+    finally { setSubmitting(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-fade-in">
+      <div className="bg-background border border-border rounded-xl w-full max-w-md shadow-2xl animate-scale-in">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <h2 className="text-lg font-semibold font-sans">Book a Session with {mentor.name}</h2>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Topic <span className="text-red-400">*</span></label>
+            <Input
+              placeholder="e.g. Fundraising strategy for seed round"
+              value={form.topic}
+              onChange={(e) => setForm({ ...form, topic: e.target.value })}
+              maxLength={100}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Description <span className="text-helper text-xs">(optional)</span></label>
+            <textarea
+              rows={3}
+              placeholder="What would you like to discuss?"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              className="w-full p-3 text-sm border border-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-accent bg-background transition-all"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Date & Time <span className="text-red-400">*</span></label>
+              <input
+                type="datetime-local"
+                min={minDate}
+                value={form.scheduledAt}
+                onChange={(e) => setForm({ ...form, scheduledAt: e.target.value })}
+                className="w-full p-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Duration</label>
+              <select
+                value={form.duration}
+                onChange={(e) => setForm({ ...form, duration: Number(e.target.value) })}
+                className="w-full p-2 text-sm border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent"
+              >
+                <option value={30}>30 min</option>
+                <option value={60}>60 min</option>
+                <option value={90}>90 min</option>
+                <option value={120}>120 min</option>
+              </select>
+            </div>
+          </div>
+          {error && <p className="text-sm text-red-400 font-mono">{error}</p>}
+          <div className="flex gap-3 pt-1">
+            <Button type="button" variant="secondary" className="flex-1" onClick={onClose} disabled={submitting}>Cancel</Button>
+            <Button type="submit" className="flex-1 transform hover:scale-105 transition-all" disabled={submitting}>
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-white" />Booking...
+                </span>
+              ) : "Confirm Booking"}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 export default function MentorProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id } = use(params);
   const [mentor, setMentor] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isPro, setIsPro] = useState(false);
+  const [isSelfMentor, setIsSelfMentor] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [showBookModal, setShowBookModal] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
 
   useEffect(() => {
     fetch(`/api/mentors/${id}`)
@@ -23,6 +135,21 @@ export default function MentorProfilePage({ params }: { params: Promise<{ id: st
       .then(data => setMentor(data))
       .catch(console.error)
       .finally(() => setLoading(false));
+
+    fetch("/api/user")
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!data) return;
+        const sub = data.subscription;
+        const proActive =
+          sub?.plan === "PRO" &&
+          sub?.status === "active" &&
+          (!sub.endDate || new Date(sub.endDate) > new Date());
+        setIsPro(proActive);
+        setIsSelfMentor(data.role === "MENTOR");
+        setCurrentUserId(data.id);
+      })
+      .catch(() => {});
   }, [id]);
 
   if (loading) {
@@ -45,8 +172,19 @@ export default function MentorProfilePage({ params }: { params: Promise<{ id: st
     );
   }
 
+  const isSelf = mentor?.id === currentUserId;
+  const isMentorUser = isSelfMentor;
+
   return (
     <div className="p-6 max-w-4xl mx-auto animate-fade-in">
+      {showBookModal && (
+        <BookSessionModal
+          mentor={mentor}
+          onClose={() => setShowBookModal(false)}
+          onBooked={() => { setShowBookModal(false); setBookingSuccess(true); }}
+        />
+      )}
+
       <Button variant="secondary" onClick={() => router.back()} className="mb-6 transform hover:scale-105 transition-all">
         <ArrowLeft className="mr-2 h-4 w-4" />Back
       </Button>
@@ -63,6 +201,7 @@ export default function MentorProfilePage({ params }: { params: Promise<{ id: st
                 <h1 className="text-h2 font-bold">{mentor.name}</h1>
                 {mentor.isVerified && <Badge variant="verified">Verified</Badge>}
                 {mentor.isPremium && <Badge variant="premium">Premium</Badge>}
+                {isSelf && <Badge variant="default">You</Badge>}
               </div>
               <p className="text-helper mb-3">{mentor.title}</p>
               <p className="text-body mb-4">{mentor.bio}</p>
@@ -71,13 +210,41 @@ export default function MentorProfilePage({ params }: { params: Promise<{ id: st
                   <Badge key={skill} variant="default" className="text-xs">{skill}</Badge>
                 ))}
               </div>
-              <Button
-                onClick={() => router.push(`/messages?mentorId=${mentor.id}&mentorName=${encodeURIComponent(mentor.name)}`)}
-                className="transform hover:scale-105 transition-all"
-              >
-                <MessageCircle className="mr-2 h-4 w-4" />
-                Ask a Question
-              </Button>
+              {!isSelf && !isMentorUser && (
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="secondary"
+                    onClick={() => router.push(`/messages?mentorId=${mentor.id}&mentorName=${encodeURIComponent(mentor.name)}`)}
+                    className="transform hover:scale-105 transition-all"
+                  >
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Ask a Question
+                  </Button>
+                  {isPro ? (
+                    <Button
+                      onClick={() => { setBookingSuccess(false); setShowBookModal(true); }}
+                      className="transform hover:scale-105 transition-all"
+                    >
+                      <Video className="mr-2 h-4 w-4" />
+                      Book Session
+                    </Button>
+                  ) : (
+                    <Link href="/upgrade">
+                      <Button variant="outline" className="transform hover:scale-105 transition-all border-accent/30">
+                        <Lock className="mr-2 h-4 w-4" />
+                        <Crown className="mr-1 h-3 w-3 text-warning" />
+                        Pro: Book Session
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              )}
+              {bookingSuccess && (
+                <p className="text-sm text-success font-mono mt-3 flex items-center gap-1 animate-fade-in">
+                  <CheckCircle className="h-4 w-4" /> Session booked! View it in{" "}
+                  <Link href="/mentor-sessions" className="underline">My Sessions</Link>.
+                </p>
+              )}
             </div>
           </div>
         </CardContent>

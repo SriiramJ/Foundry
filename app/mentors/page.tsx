@@ -26,9 +26,14 @@ export default function MentorsPage() {
   const [selectedExpertise, setSelectedExpertise] = useState("All Areas");
   const [mentors, setMentors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     fetchMentors();
+    fetch("/api/user").then(r => r.ok ? r.json() : null).then(d => {
+      if (d) { setCurrentUserId(d.id); setCurrentUserRole(d.role); }
+    }).catch(() => {});
   }, []);
 
   const fetchMentors = async () => {
@@ -202,16 +207,18 @@ export default function MentorsPage() {
               </div>
               
               <div className="flex gap-2">
-                <Button
-                  className="flex-1 transform hover:scale-105 transition-all"
-                  onClick={() => router.push(`/messages?mentorId=${mentor.id}&mentorName=${encodeURIComponent(mentor.name)}`)}
-                >
-                  <MessageCircle className="mr-2 h-4 w-4" />
-                  Ask Question
-                </Button>
+                {mentor.id !== currentUserId && currentUserRole !== "MENTOR" && (
+                  <Button
+                    className="flex-1 transform hover:scale-105 transition-all"
+                    onClick={() => router.push(`/messages?mentorId=${mentor.id}&mentorName=${encodeURIComponent(mentor.name)}`)}
+                  >
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Ask Question
+                  </Button>
+                )}
                 <Button
                   variant="secondary"
-                  className="transform hover:scale-105 transition-all"
+                  className="flex-1 transform hover:scale-105 transition-all"
                   onClick={() => router.push(`/mentors/${mentor.id}`)}
                 >
                   View Profile

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, X, Star, Zap, Crown, ArrowLeft, CreditCard } from "lucide-react";
+import { CheckCircle, X, Star, Zap, Crown, ArrowLeft, CreditCard, Calendar, AlertCircle } from "lucide-react";
 import Script from "next/script";
 
 declare global {
@@ -112,9 +112,35 @@ export default function UpgradePage() {
 
   const currentPlan = subscription?.plan?.toLowerCase() || "free";
   const isActive = subscription?.status === "active";
+  const endDate = subscription?.endDate ? new Date(subscription.endDate) : null;
+  const isExpired = endDate ? endDate < new Date() : false;
+  const daysLeft = endDate && !isExpired
+    ? Math.ceil((endDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : 0;
 
   const handleUpgrade = async (planId: string) => {
-    if (planId === "free") return;
+    if (planId === "free") {
+      // Downgrade — no payment needed, just update via upgrade API
+      setLoadingPlan("free");
+      try {
+        const res = await fetch("/api/upgrade", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ planId: "free" }),
+        });
+        if (res.ok) {
+          setSubscription(null);
+          router.refresh();
+        } else {
+          alert("Failed to downgrade. Please try again.");
+        }
+      } catch {
+        alert("Something went wrong.");
+      } finally {
+        setLoadingPlan(null);
+      }
+      return;
+    }
     setLoadingPlan(planId);
 
     try {
@@ -185,15 +211,18 @@ export default function UpgradePage() {
   };
 
   const getPlanCta = (planId: string) => {
-    if (planId === "free") return "Current Plan";
-    if (currentPlan === planId && isActive) return "Current Plan";
-    if (currentPlan !== "free" && isActive) return "Change Plan";
+    if (planId === "free") {
+      return currentPlan !== "free" && isActive && !isExpired ? "Downgrade to Free" : "Current Plan";
+    }
+    if (currentPlan === planId && isActive && !isExpired) return "Current Plan";
+    if (currentPlan === planId && isExpired) return "Renew Plan";
+    if (currentPlan !== "free" && isActive && !isExpired) return "Switch Plan";
     return "Upgrade Now";
   };
 
   const isPlanDisabled = (planId: string) => {
-    if (planId === "free") return true;
-    if (currentPlan === planId && isActive) return true;
+    if (planId === "free") return currentPlan === "free" || !isActive || isExpired;
+    if (currentPlan === planId && isActive && !isExpired) return true;
     return false;
   };
 
@@ -214,16 +243,46 @@ export default function UpgradePage() {
             </p>
           </div>
 
-          {/* Active Subscription Banner */}
-          {currentPlan !== "free" && isActive && (
-            <Card className="mb-8 border-success/30 bg-success/5 animate-fade-in">
+          {/* Subscription Status Banner */}
+          {currentPlan !== "free" && (
+            <Card className={`mb-8 animate-fade-in ${
+              isExpired
+                ? "border-red-500/30 bg-red-500/5"
+                : daysLeft <= 3
+                ? "border-warning/30 bg-warning/5"
+                : "border-success/30 bg-success/5"
+            }`}>
               <CardContent className="pt-4 pb-4">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-5 w-5 text-success" />
-                  <div>
-                    <p className="font-medium">You're on the <span className="capitalize">{currentPlan}</span> plan</p>
-                    <p className="text-sm text-helper">You have access to all premium features.</p>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    {isExpired ? (
+                      <AlertCircle className="h-5 w-5 text-red-400 shrink-0" />
+                    ) : daysLeft <= 3 ? (
+                      <AlertCircle className="h-5 w-5 text-warning shrink-0" />
+                    ) : (
+                      <CheckCircle className="h-5 w-5 text-success shrink-0" />
+                    )}
+                    <div>
+                      <p className="font-medium">
+                        {isExpired
+                          ? `Your ${currentPlan} plan has expired`
+                          : `You're on the ${currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} plan`}
+                      </p>
+                      <p className="text-sm text-helper flex items-center gap-1">
+                        <Calendar className="h-3 w-3" />
+                        {isExpired
+                          ? `Expired on ${endDate?.toLocaleDateString()}`
+                          : daysLeft <= 3
+                          ? `Expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''} — renew now`
+                          : `Active until ${endDate?.toLocaleDateString()}`}
+                      </p>
+                    </div>
                   </div>
+                  {(isExpired || daysLeft <= 3) && (
+                    <Badge className={isExpired ? "bg-red-500/20 text-red-400 border-red-500/30" : "bg-warning/20 text-warning border-warning/30"}>
+                      {isExpired ? "Expired" : `${daysLeft}d left`}
+                    </Badge>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -234,7 +293,13 @@ export default function UpgradePage() {
             {plans.map((plan, index) => (
               <Card
                 key={plan.id}
-                className={`relative card-hover animate-scale-in ${plan.popular ? "border-accent shadow-lg scale-105" : ""} ${currentPlan === plan.id && isActive ? "border-success/50" : ""}`}
+                className={`relative card-hover animate-scale-in ${
+                  plan.popular ? "border-accent shadow-lg scale-105" : ""
+                } ${
+                  currentPlan === plan.id && isActive && !isExpired ? "border-success/50" : ""
+                } ${
+                  currentPlan === plan.id && isExpired ? "border-red-500/30" : ""
+                }`}
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 {plan.popular && (
@@ -244,9 +309,14 @@ export default function UpgradePage() {
                     </Badge>
                   </div>
                 )}
-                {currentPlan === plan.id && isActive && (
+                {currentPlan === plan.id && !isExpired && isActive && (
                   <div className="absolute -top-3 right-4">
                     <Badge className="bg-success text-white px-3 py-1">Active</Badge>
+                  </div>
+                )}
+                {currentPlan === plan.id && isExpired && (
+                  <div className="absolute -top-3 right-4">
+                    <Badge className="bg-red-500 text-white px-3 py-1">Expired</Badge>
                   </div>
                 )}
 

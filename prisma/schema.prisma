@@ -53,6 +53,7 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  roadmap       Roadmap?
   accounts      Account[]
   sessions      Session[]
   problems      Problem[]
@@ -62,6 +63,8 @@ model User {
   passwordResetTokens PasswordResetToken[]
   subscription  Subscription?
   mentorApplication MentorApplication?
+  mentorSessions  MentorSession[] @relation("MentorSessions")
+  learnedSessions MentorSession[] @relation("LearnedSessions")
   sentMessages     DirectMessage[] @relation("SentMessages")
   receivedMessages DirectMessage[] @relation("ReceivedMessages")
 }
@@ -169,6 +172,24 @@ model Subscription {
   userId    String           @unique @db.ObjectId
 }
 
+model MentorSession {
+  id          String              @id @default(auto()) @map("_id") @db.ObjectId
+  topic       String
+  description String?
+  scheduledAt DateTime
+  duration    Int                 @default(60)
+  status      MentorSessionStatus @default(PENDING)
+  meetLink    String?
+  notes       String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  mentor      User   @relation("MentorSessions", fields: [mentorId], references: [id])
+  mentorId    String @db.ObjectId
+  learner     User   @relation("LearnedSessions", fields: [learnerId], references: [id])
+  learnerId   String @db.ObjectId
+}
+
 model PasswordResetToken {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   token     String   @unique
@@ -179,6 +200,13 @@ model PasswordResetToken {
   createdAt DateTime @default(now())
 
   @@map("password_reset_tokens")
+}
+
+enum MentorSessionStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
 }
 
 enum Role {
@@ -223,4 +251,15 @@ enum SubscriptionPlan {
   FREE
   PREMIUM
   PRO
+}
+
+model Roadmap {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @unique @db.ObjectId
+  stage       String
+  payload     Json     // full roadmap JSON from AI
+  generatedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -147,6 +147,8 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
   };
 
   const isOwner = session?.user?.id === problem?.createdById;
+  const isMentor = (session?.user as any)?.role === "MENTOR";
+  const hasSubmittedSolution = problem?.solutions?.some((s: any) => s.author?.id === session?.user?.id);
 
   return (
     <div className="p-6 max-w-4xl mx-auto animate-fade-in">
@@ -318,7 +320,7 @@ export default function ProblemPage({ params }: { params: Promise<{ id: string }
             ))}
           </div>
 
-          {!problem.isSolved && (
+          {!problem.isSolved && !isOwner && !hasSubmittedSolution && (
             <Card className="mt-6 card-hover animate-fade-in">
               <CardContent className="pt-6 text-center">
                 <h3 className="font-medium mb-2">Have a solution to share?</h3>

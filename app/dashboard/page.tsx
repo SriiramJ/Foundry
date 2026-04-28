@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { Plus, MessageSquare, CheckCircle, TrendingUp, Star } from "lucide-react";
+import { Plus, MessageSquare, CheckCircle, TrendingUp, Star, Crown, Calendar } from "lucide-react";
 
 function RecentActivity() {
   const [activities, setActivities] = useState<any[]>([]);
@@ -138,7 +138,11 @@ export default function DashboardPage() {
     <div className="p-3 sm:p-6 animate-fade-in">
       <div className="mb-6 sm:mb-8 animate-slide-in">
         <h1 className="text-h1 mb-2">Welcome back, {session?.user?.name}</h1>
-        <p className="text-body">Here's what's happening in your entrepreneurial journey.</p>
+        <p className="text-body">
+          {dashboardData?.role === "MENTOR"
+            ? "Here's an overview of your mentoring activity."
+            : "Here's what's happening in your entrepreneurial journey."}
+        </p>
       </div>
 
       {/* Responsive Layout */}
@@ -146,66 +150,145 @@ export default function DashboardPage() {
         {/* Stats Cards */}
         <div className="lg:col-span-8 space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 stagger-children">
-            <Card className="problem-card">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Problems Posted</CardTitle>
-                  <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-2xl font-bold text-foreground">{dashboardData?.problemsPosted || 0}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {dashboardData?.weeklyChanges?.problems > 0 ? '+' : ''}{dashboardData?.weeklyChanges?.problems || 0} from last week
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="problem-card">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Solutions Received</CardTitle>
-                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-2xl font-bold text-foreground">{dashboardData?.solutionsReceived || 0}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {dashboardData?.weeklyChanges?.solutions > 0 ? '+' : ''}{dashboardData?.weeklyChanges?.solutions || 0} from last week
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="problem-card">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Reputation Points</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-2xl font-bold text-foreground">{dashboardData?.reputation || 0}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {dashboardData?.weeklyChanges?.reputation > 0 ? '+' : ''}{dashboardData?.weeklyChanges?.reputation || 0} from last week
-                </p>
-              </CardContent>
-            </Card>
-            
-            <Card className="problem-card">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Account Status</CardTitle>
-                  <Badge className={`${dashboardData?.isPremium ? 'mentor-badge' : 'bg-muted/50 text-muted-foreground border border-border'} text-xs`}>
-                    {dashboardData?.isPremium ? 'Premium' : 'Free'}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <Link href="/upgrade">
-                  <Button className="btn-premium text-xs w-full">Upgrade</Button>
-                </Link>
-              </CardContent>
-            </Card>
+            {dashboardData?.role === "MENTOR" ? (
+              <>
+                <Card className="problem-card">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Solutions Given</CardTitle>
+                      <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="text-2xl font-bold text-foreground">{dashboardData?.solutionsReceived || 0}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {dashboardData?.weeklyChanges?.solutions > 0 ? "+" : ""}{dashboardData?.weeklyChanges?.solutions || 0} from last week
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className="problem-card">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Reputation Points</CardTitle>
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="text-2xl font-bold text-foreground">{dashboardData?.reputation || 0}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {dashboardData?.weeklyChanges?.reputation > 0 ? "+" : ""}{dashboardData?.weeklyChanges?.reputation || 0} from last week
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className="problem-card">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Pending Sessions</CardTitle>
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="text-2xl font-bold text-foreground">{dashboardData?.pendingSessions || 0}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Awaiting your approval</p>
+                  </CardContent>
+                </Card>
+                <Card className="problem-card">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Messages</CardTitle>
+                      <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="text-2xl font-bold text-foreground">{dashboardData?.problemsPosted || 0}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Total conversations</p>
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <>
+                <Card className="problem-card">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Problems Posted</CardTitle>
+                      <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="text-2xl font-bold text-foreground">{dashboardData?.problemsPosted || 0}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {dashboardData?.weeklyChanges?.problems > 0 ? "+" : ""}{dashboardData?.weeklyChanges?.problems || 0} from last week
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className="problem-card">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Solutions Received</CardTitle>
+                      <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="text-2xl font-bold text-foreground">{dashboardData?.solutionsReceived || 0}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {dashboardData?.weeklyChanges?.solutions > 0 ? "+" : ""}{dashboardData?.weeklyChanges?.solutions || 0} from last week
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className="problem-card">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Reputation Points</CardTitle>
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="text-2xl font-bold text-foreground">{dashboardData?.reputation || 0}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {dashboardData?.weeklyChanges?.reputation > 0 ? "+" : ""}{dashboardData?.weeklyChanges?.reputation || 0} from last week
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className="problem-card">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">Account Status</CardTitle>
+                      {dashboardData?.subscription?.status === "active" ? (
+                        <Crown className="h-4 w-4 text-warning" />
+                      ) : (
+                        <Star className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    {dashboardData?.subscription?.status === "active" ? (
+                      <>
+                        <div className="text-2xl font-bold text-foreground capitalize">
+                          {dashboardData.subscription.plan.charAt(0) + dashboardData.subscription.plan.slice(1).toLowerCase()}
+                        </div>
+                        {dashboardData.subscription.endDate && (
+                          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Expires {new Date(dashboardData.subscription.endDate).toLocaleDateString()}
+                          </p>
+                        )}
+                        <Link href="/upgrade" className="block mt-2">
+                          <Button variant="outline" className="text-xs w-full border-border hover:border-accent/30">Manage Plan</Button>
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-2xl font-bold text-foreground">Free</div>
+                        <p className="text-xs text-muted-foreground mt-1">Upgrade for more features</p>
+                        <Link href="/upgrade" className="block mt-2">
+                          <Button className="btn-premium text-xs w-full">Upgrade</Button>
+                        </Link>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </div>
 
           {/* Recent Problems */}
@@ -251,31 +334,68 @@ export default function DashboardPage() {
               <CardDescription className="font-mono">Get started with common tasks</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 p-6">
-              <Link href="/post-problem" className="block">
-                <Button className="w-full justify-start btn-primary transform hover:scale-105 transition-all font-mono">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Post a New Problem
-                </Button>
-              </Link>
-              <Link href="/knowledge-base" className="block">
-                <Button variant="outline" className="w-full justify-start transform hover:scale-105 transition-all font-mono border-border hover:border-accent/30">
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  Browse Knowledge Base
-                </Button>
-              </Link>
-              <Link href="/mentors" className="block">
-                <Button variant="outline" className="w-full justify-start transform hover:scale-105 transition-all font-mono border-border hover:border-accent/30">
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Find Mentors
-                </Button>
-              </Link>
-              {dashboardData?.role !== "MENTOR" && !dashboardData?.mentorApplication && (
-                <Link href="/apply-mentor" className="block">
-                  <Button variant="outline" className="w-full justify-start transform hover:scale-105 transition-all font-mono border-border hover:border-accent/30">
-                    <Star className="mr-2 h-4 w-4" />
-                    Apply to become a Mentor
-                  </Button>
-                </Link>
+              {dashboardData?.role === "MENTOR" ? (
+                <>
+                  <Link href="/knowledge-base" className="block">
+                    <Button className="w-full justify-start btn-primary transform hover:scale-105 transition-all font-mono">
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      Browse Problems to Solve
+                    </Button>
+                  </Link>
+                  <Link href="/mentor-sessions" className="block">
+                    <Button variant="outline" className="w-full justify-start transform hover:scale-105 transition-all font-mono border-border hover:border-accent/30">
+                      <Calendar className="mr-2 h-4 w-4" />
+                      View Session Requests
+                    </Button>
+                  </Link>
+                  <Link href="/roadmap" className="block">
+                    <Button variant="outline" className="w-full justify-start transform hover:scale-105 transition-all font-mono border-border hover:border-accent/30">
+                      <Star className="mr-2 h-4 w-4" />
+                      My Learning Roadmap
+                    </Button>
+                  </Link>
+                  <Link href="/messages" className="block">
+                    <Button variant="outline" className="w-full justify-start transform hover:scale-105 transition-all font-mono border-border hover:border-accent/30">
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      Messages
+                    </Button>
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/post-problem" className="block">
+                    <Button className="w-full justify-start btn-primary transform hover:scale-105 transition-all font-mono">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Post a New Problem
+                    </Button>
+                  </Link>
+                  <Link href="/knowledge-base" className="block">
+                    <Button variant="outline" className="w-full justify-start transform hover:scale-105 transition-all font-mono border-border hover:border-accent/30">
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      Browse Knowledge Base
+                    </Button>
+                  </Link>
+                  <Link href="/mentors" className="block">
+                    <Button variant="outline" className="w-full justify-start transform hover:scale-105 transition-all font-mono border-border hover:border-accent/30">
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Find Mentors
+                    </Button>
+                  </Link>
+                  <Link href="/roadmap" className="block">
+                    <Button variant="outline" className="w-full justify-start transform hover:scale-105 transition-all font-mono border-border hover:border-accent/30">
+                      <Star className="mr-2 h-4 w-4" />
+                      My Learning Roadmap
+                    </Button>
+                  </Link>
+                  {dashboardData?.role !== "MENTOR" && !dashboardData?.mentorApplication && (
+                    <Link href="/apply-mentor" className="block">
+                      <Button variant="outline" className="w-full justify-start transform hover:scale-105 transition-all font-mono border-border hover:border-accent/30">
+                        <Star className="mr-2 h-4 w-4" />
+                        Apply to become a Mentor
+                      </Button>
+                    </Link>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>

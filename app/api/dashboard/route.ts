@@ -10,6 +10,20 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Admin is not a DB user — return empty dashboard
+    if (session.user.id === "admin") {
+      return NextResponse.json({
+        problemsPosted: 0,
+        solutionsReceived: 0,
+        reputation: 0,
+        isPremium: false,
+        role: "ADMIN",
+        mentorApplication: null,
+        upvotesReceived: 0,
+        subscription: null,
+        weeklyChanges: { problems: 0, solutions: 0, reputation: 0 },
+      });
+    }
     const now = new Date();
     const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
@@ -64,21 +78,15 @@ export async function GET() {
       prisma.solution.count({ where: { authorId: session.user.id } }),
       prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { 
-          reputation: true, 
-          isPremium: true, 
-          role: true,
-          mentorApplication: true 
-        }
+        select: { reputation: true, isPremium: true, role: true },
       })
     ]);
 
-    const totalUpvotes = await prisma.vote.count({
-      where: {
-        type: "UP",
-        solution: { authorId: session.user.id }
-      }
-    });
+    const [totalUpvotes, mentorApplication, subscription] = await Promise.all([
+      prisma.vote.count({ where: { type: "UP", solution: { authorId: session.user.id } } }),
+      prisma.mentorApplication.findUnique({ where: { userId: session.user.id } }),
+      prisma.subscription.findUnique({ where: { userId: session.user.id } }),
+    ]);
 
     return NextResponse.json({
       problemsPosted: totalProblems,
@@ -86,8 +94,13 @@ export async function GET() {
       reputation: user?.reputation || 0,
       isPremium: user?.isPremium || false,
       role: user?.role || 'EXPLORER',
-      mentorApplication: user?.mentorApplication || null,
+      mentorApplication: mentorApplication || null,
       upvotesReceived: totalUpvotes,
+      subscription: subscription ? {
+        plan: subscription.plan,
+        status: subscription.status,
+        endDate: subscription.endDate,
+      } : null,
       weeklyChanges: {
         problems: currentWeek[0] - previousWeek[0],
         solutions: currentWeek[1] - previousWeek[1],

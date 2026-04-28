@@ -60,3 +60,38 @@ export async function GET() {
     return NextResponse.json({ error: "Failed to fetch user data" }, { status: 500 });
   }
 }
+
+// PATCH /api/user — update avatar
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { image } = await request.json();
+    if (!image || typeof image !== "string") {
+      return NextResponse.json({ error: "image is required" }, { status: 400 });
+    }
+
+    // Accept only base64 data URLs (jpeg/png/webp)
+    if (!image.startsWith("data:image/")) {
+      return NextResponse.json({ error: "Invalid image format" }, { status: 400 });
+    }
+
+    // Limit to ~2MB (base64 ~2.7MB raw)
+    if (image.length > 2_800_000) {
+      return NextResponse.json({ error: "Image too large. Max 2MB." }, { status: 400 });
+    }
+
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { image },
+    });
+
+    return NextResponse.json({ success: true, image });
+  } catch (error) {
+    console.error("Avatar update error:", error);
+    return NextResponse.json({ error: "Failed to update avatar" }, { status: 500 });
+  }
+}
