@@ -19,26 +19,29 @@ import {
   BarChart2,
   Calendar,
   Search,
+  Map,
 } from "lucide-react";
 
 const userNavigation = [
-  { name: "Dashboard", href: "/dashboard", icon: Home },
-  { name: "Post Problem", href: "/post-problem", icon: Plus },
+  { name: "Dashboard",    href: "/dashboard",       icon: Home },
+  { name: "Post Problem", href: "/post-problem",    icon: Plus },
   { name: "Knowledge Base", href: "/knowledge-base", icon: BookOpen },
-  { name: "Mentors", href: "/mentors", icon: Users },
-  { name: "Messages", href: "/messages", icon: MessageCircle },
-  { name: "Sessions", href: "/mentor-sessions", icon: Calendar },
-  { name: "Analytics", href: "/analytics", icon: BarChart2 },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Mentors",      href: "/mentors",         icon: Users },
+  { name: "Messages",     href: "/messages",        icon: MessageCircle },
+  { name: "Sessions",     href: "/mentor-sessions", icon: Calendar },
+  { name: "Roadmap",      href: "/roadmap",         icon: Map },
+  { name: "Analytics",   href: "/analytics",       icon: BarChart2 },
+  { name: "Settings",    href: "/settings",        icon: Settings },
 ];
 
 const mentorNavigation = [
-  { name: "Dashboard", href: "/dashboard", icon: Home },
+  { name: "Dashboard",    href: "/dashboard",       icon: Home },
   { name: "Knowledge Base", href: "/knowledge-base", icon: BookOpen },
-  { name: "Messages", href: "/messages", icon: MessageCircle },
-  { name: "Sessions", href: "/mentor-sessions", icon: Calendar },
-  { name: "Analytics", href: "/analytics", icon: BarChart2 },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Messages",     href: "/messages",        icon: MessageCircle },
+  { name: "Sessions",     href: "/mentor-sessions", icon: Calendar },
+  { name: "Roadmap",      href: "/roadmap",         icon: Map },
+  { name: "Analytics",   href: "/analytics",       icon: BarChart2 },
+  { name: "Settings",    href: "/settings",        icon: Settings },
 ];
 
 export function Sidebar() {

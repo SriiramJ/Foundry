@@ -348,6 +348,12 @@ export default function DashboardPage() {
                       View Session Requests
                     </Button>
                   </Link>
+                  <Link href="/roadmap" className="block">
+                    <Button variant="outline" className="w-full justify-start transform hover:scale-105 transition-all font-mono border-border hover:border-accent/30">
+                      <Star className="mr-2 h-4 w-4" />
+                      My Learning Roadmap
+                    </Button>
+                  </Link>
                   <Link href="/messages" className="block">
                     <Button variant="outline" className="w-full justify-start transform hover:scale-105 transition-all font-mono border-border hover:border-accent/30">
                       <MessageSquare className="mr-2 h-4 w-4" />
@@ -373,6 +379,12 @@ export default function DashboardPage() {
                     <Button variant="outline" className="w-full justify-start transform hover:scale-105 transition-all font-mono border-border hover:border-accent/30">
                       <CheckCircle className="mr-2 h-4 w-4" />
                       Find Mentors
+                    </Button>
+                  </Link>
+                  <Link href="/roadmap" className="block">
+                    <Button variant="outline" className="w-full justify-start transform hover:scale-105 transition-all font-mono border-border hover:border-accent/30">
+                      <Star className="mr-2 h-4 w-4" />
+                      My Learning Roadmap
                     </Button>
                   </Link>
                   {dashboardData?.role !== "MENTOR" && !dashboardData?.mentorApplication && (

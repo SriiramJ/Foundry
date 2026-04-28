@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { TrendingUp, MessageSquare, CheckCircle, ThumbsUp, Star, Crown, BarChart2, Lock } from "lucide-react";
+import { TrendingUp, MessageSquare, CheckCircle, ThumbsUp, Star, Crown, BarChart2, Lock, ArrowLeft } from "lucide-react";
 
 // ── Bar Chart ────────────────────────────────────────────────────────────────
 function BarChart({ data, labels, color }: { data: number[]; labels: string[]; color: string }) {
@@ -63,6 +64,7 @@ function CategoryRow({ category, count, max }: { category: string; count: number
 // ── Main Page ────────────────────────────────────────────────────────────────
 export default function AnalyticsPage() {
   const { data: session } = useSession();
+  const router = useRouter();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isPremium, setIsPremium] = useState(false);
@@ -92,6 +94,9 @@ export default function AnalyticsPage() {
   if (!isPremium) {
     return (
       <div className="p-6 animate-fade-in">
+        <Button variant="secondary" onClick={() => router.back()} className="mb-6 transform hover:scale-105 transition-all">
+          <ArrowLeft className="mr-2 h-4 w-4" />Back
+        </Button>
         <div className="mb-8 animate-slide-in">
           <h1 className="text-h1 mb-2 flex items-center gap-3">
             <BarChart2 className="h-8 w-8 text-accent" /> Analytics
@@ -155,6 +160,9 @@ export default function AnalyticsPage() {
 
   return (
     <div className="p-6 animate-fade-in">
+      <Button variant="secondary" onClick={() => router.back()} className="mb-6 transform hover:scale-105 transition-all">
+        <ArrowLeft className="mr-2 h-4 w-4" />Back
+      </Button>
       <div className="mb-8 animate-slide-in">
         <h1 className="text-h1 mb-2 flex items-center gap-3">
           <BarChart2 className="h-8 w-8 text-accent" /> Analytics
