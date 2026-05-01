@@ -9,6 +9,5 @@ export function generateKeyUri(email: string, secret: string, issuer: string): s
 }
 
 export function verifyToken(token: string, secret: string): boolean {
-  const result = verifySync({ token, secret, strategy: "totp" });
-  return result === true || (typeof result === "object" && (result as any).isValid === true);
+  return verifySync({ token, secret, strategy: "totp" }) as unknown as boolean;
 }
