@@ -1,3 +1,17 @@
+import { readFileSync } from "fs";
+import { resolve } from "path";
+
+// Load .env manually
+try {
+  const envFile = readFileSync(resolve(process.cwd(), ".env"), "utf-8");
+  for (const line of envFile.split("\n")) {
+    const [key, ...rest] = line.split("=");
+    if (key && rest.length) process.env[key.trim()] = rest.join("=").trim();
+  }
+} catch {
+  // .env not found, rely on system env vars
+}
+
 const required = [
   "DATABASE_URL",
   "NEXTAUTH_URL",
